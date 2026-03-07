@@ -1,0 +1,3127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Minecraft Circle Generator – Circle & Oval Blueprint Tool</title>
+<meta name="description" content="Free Minecraft Circle Generator. Build pixel-perfect circles and ovals with block counts, row patterns, and PNG/SVG export. No sign-up required."/>
+
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Oxanium:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+/* ════════════════════════════════════════════
+   TOKENS
+════════════════════════════════════════════ */
+:root {
+  /* ── 背景层级：中性深灰，减少视觉疲劳 ── */
+  --bg:        #1e1e1e;
+  --bg2:       #252525;
+  --bg3:       #2b2b2b;
+  --bg4:       #333333;
+  --border:    #444444;
+  --border2:   #555555;
+
+  /* ── 文字：高对比白灰，确保可读性 ── */
+  --text:      #e0e0e0;
+  --text2:     #b0b0b0;
+  --text3:     #777777;
+
+  /* ── 主 accent：草地绿 ── */
+  --accent:    #5aeb5d;
+  --accent2:   #409f47;
+  --accent-bg: rgba(90,235,93,.09);
+
+  /* ── 辅助 legacy tokens ── */
+  --blue:      #5aeb5d;
+  --blue-bg:   rgba(90,235,93,.07);
+  --amber:     #ffad33;
+  --amber-bg:  rgba(255,173,51,.08);
+  --red:       #ff4d4d;
+
+  /* ── Canvas 方块色 ── */
+  --block:     #5aeb5d;
+  --block2:    #3a7a28;
+  --empty:     #1a1a1a;
+  --grid-line: rgba(255,255,255,.045);
+  --axis:      rgba(135,244,149,.45);
+
+  /* ── 形状 ── */
+  --radius:    3px;
+  --radius2:   5px;
+
+  /* ── 字体 ── */
+  --mono:      'JetBrains Mono', monospace;
+  --sans:      'Oxanium', sans-serif;
+  --display:   'VT323', monospace;
+  --shadow:    0 4px 20px rgba(0,0,0,.55);
+
+  /* ── 语义 palette ── */
+  --clr-nature:     #5aeb5d;   /* 草方块绿  — logo/选中/品牌  */
+  --clr-teal:       #87f495;   /* 嫩草绿    — 数值/数据       */
+  --clr-gold:       #ffad33;   /* 木材橙    — 材料/数量       */
+  --clr-redstone:   #ff4d4d;   /* 红石红    — 操作/警告       */
+  --clr-nature-bg:  rgba(90,235,93,.08);
+  --clr-teal-bg:    rgba(135,244,149,.07);
+  --clr-gold-bg:    rgba(255,173,51,.09);
+  --clr-redstone-bg:rgba(255,77,77,.08);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,.008) 3px, rgba(255,255,255,.008) 4px);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ════════ SCROLLBAR ════════ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ════════ LAYOUT ════════ */
+.site-header {
+  background: var(--bg2);
+  border-bottom: 2px solid var(--accent);
+  padding: 12px 24px;
+  display: flex; align-items: center; gap: 12px;
+  position: sticky; top: 0; z-index: 200;
+  box-shadow: 0 2px 14px rgba(90,235,93,.08);
+}
+.logo-mark {
+  width: 32px; height: 32px;
+  background: var(--accent);
+  display: grid; grid-template-columns: repeat(3,1fr); grid-template-rows: repeat(3,1fr);
+  gap: 2px; padding: 4px; flex-shrink: 0;
+  border-radius: 4px;
+}
+.logo-mark span { background: var(--block2); border-radius: 1px; }
+.logo-mark span:nth-child(2),.logo-mark span:nth-child(4),.logo-mark span:nth-child(6),.logo-mark span:nth-child(8) { background: transparent; }
+.site-title { font-family: var(--display); font-size: 24px; font-weight: 400; color: var(--accent); letter-spacing: .05em; text-shadow: 0 0 12px rgba(90,235,93,.45), 0 0 3px rgba(90,235,93,.7); line-height: 1; }
+.site-title em { color: #fff; font-style: normal; text-shadow: none; }
+.header-spacer { flex: 1; }
+.header-tag { font-size: 11px; font-family: var(--mono); color: var(--text3); background: var(--bg3); border: 1px solid var(--border); padding: 3px 8px; border-radius: 4px; display: none; }
+@media(min-width:600px){ .header-tag { display: block; } }
+
+
+/* ════════ HERO ════════ */
+.page-hero {
+  padding: 14px 24px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+.page-hero h1 {
+  font-family: var(--display);
+  font-size: 30px; font-weight: 400; color: var(--accent);
+  margin: 0 0 4px; letter-spacing: .04em;
+  text-shadow: 0 0 16px rgba(90,235,93,.3);
+  line-height: 1.1;
+}
+.page-hero p {
+  font-size: 12px; color: var(--text3); margin: 0; line-height: 1.5;
+}
+
+/* ════════ QUICK SIZES ════════ */
+.quick-sizes {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  padding: 7px 16px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+}
+.qs-label { font-size: 10px; font-family: var(--mono); color: var(--text3); margin-right: 2px; flex-shrink: 0; }
+.qs-btn {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  color: var(--text2); background: var(--bg3);
+  border: 1px solid var(--border); border-radius: 3px;
+  padding: 3px 7px; cursor: pointer;
+  transition: all .15s;
+}
+.qs-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-bg); }
+.qs-btn.active { color: var(--accent); border-color: var(--accent); background: var(--accent-bg); }
+
+/* ════════ TOOL AREA ════════ */
+.tool-area {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 0;
+  align-items: stretch;
+  /* Fix the tool area to viewport height so both columns are always equal */
+  height: calc(100vh - 164px); /* site-header≈64 + hero≈58 + quick-sizes≈42 */
+  max-height: 900px;
+  min-height: 480px;
+  overflow: hidden;
+}
+@media(max-width:960px) {
+  .tool-area { grid-template-columns: 1fr 290px; }
+}
+@media(max-width:780px) {
+  .tool-area { grid-template-columns: 1fr; height: auto; max-height: none; min-height: 0; overflow: visible; }
+}
+
+/* ════════ CONTROLS ════════ */
+.controls {
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  padding: 10px 14px;
+  display: flex; flex-direction: column; gap: 8px;
+  overflow-y: auto;
+  height: 100%;        /* fill the fixed tool-area row */
+  min-height: 0;
+}
+
+.ctrl-section { display: flex; flex-direction: column; gap: 5px; }
+.ctrl-section-title {
+  font-size: 8px; font-family: var(--sans); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .2em;
+  color: var(--clr-teal);
+  padding-bottom: 5px;
+  border-bottom: 1px solid rgba(79,195,247,.2);
+}
+
+/* Inputs */
+.input-row { display: flex; gap: 8px; align-items: flex-end; }
+.input-group { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.input-group label { font-size: 11px; font-family: var(--mono); color: var(--text2); }
+.num-input {
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--clr-teal); font-family: var(--display); font-size: 24px; font-weight: 400;
+  padding: 5px 8px; border-radius: var(--radius); width: 100%; outline: none;
+  transition: border-color .2s;
+  text-align: center;
+}
+.num-input:focus { border-color: var(--accent); }
+.link-btn {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  background: var(--bg3); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text3); font-size: 14px;
+  transition: all .2s; align-self: center; margin-bottom: 0;
+}
+.link-btn.linked { color: var(--accent); border-color: var(--accent); background: var(--accent-bg); }
+.link-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+/* Toggle */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.toggle-label { font-size: 12px; color: var(--text2); }
+.toggle-wrap { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+.toggle-wrap input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-slider {
+  position: absolute; inset: 0; cursor: pointer;
+  background: var(--bg4); border-radius: 11px;
+  transition: background .2s;
+}
+.toggle-slider::after {
+  content: ''; position: absolute;
+  width: 16px; height: 16px; left: 3px; top: 3px;
+  background: var(--text3); border-radius: 50%;
+  transition: transform .2s, background .2s;
+}
+.toggle-wrap input:checked + .toggle-slider { background: var(--accent); }
+.toggle-wrap input:checked + .toggle-slider::after { transform: translateX(18px); background: #fff; }
+
+/* Mode buttons */
+.mode-group { display: flex; gap: 4px; }
+.mode-btn {
+  flex: 1; padding: 8px 4px; text-align: center;
+  font-size: 11px; font-family: var(--mono); font-weight: 700;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text2); cursor: pointer; border-radius: var(--radius);
+  transition: all .15s;
+}
+.mode-btn:hover { color: var(--text); border-color: var(--border2); }
+.mode-btn.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+
+/* Stats — compact inline row */
+.stats-grid {
+  display: flex; gap: 0;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.stat-box {
+  flex: 1; padding: 6px 8px;
+  display: flex; flex-direction: column; gap: 1px;
+  border-right: 1px solid var(--border);
+}
+.stat-box:last-child { border-right: none; }
+.stat-val { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--accent); line-height: 1; }
+.stat-lbl { font-size: 9px; color: var(--text3); font-family: var(--mono); }
+
+/* Export */
+.export-row { display: flex; gap: 6px; }
+.btn {
+  flex: 1; padding: 7px 8px; border: none; cursor: pointer;
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  border-radius: var(--radius); transition: all .15s;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.btn-accent { background: var(--clr-gold); color: #0D0800; font-weight: 700; }
+.btn-accent:hover { background: #e89a20; transform: translateY(-1px); }
+.btn-ghost { background: var(--bg3); border: 1px solid var(--border2); color: var(--text2); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+.btn-blue { background: var(--blue-bg); border: 1px solid var(--blue); color: var(--blue); }
+.btn-blue:hover { background: rgba(91,142,255,.18); }
+
+/* Nudge buttons */
+.nudge-row { display: flex; gap: 3px; margin-top: 2px; }
+.nudge-btn {
+  flex: 1; padding: 2px 0; font-family: var(--mono); font-size: 10px; font-weight: 700;
+  background: var(--bg4); border: 1px solid var(--border); color: var(--text3);
+  cursor: pointer; border-radius: 3px; transition: all .15s;
+}
+.nudge-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-bg); }
+
+
+/* Export settings panel — collapsible */
+.export-settings-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; padding: 4px 0; user-select: none;
+  font-size: 10px; font-family: var(--mono); color: var(--text3);
+}
+.export-settings-toggle:hover { color: var(--text2); }
+.export-settings-arrow { transition: transform .2s; font-size: 9px; }
+.export-settings-toggle.open .export-settings-arrow { transform: rotate(180deg); }
+.export-settings {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 7px 10px;
+  display: none; grid-template-columns: 1fr 1fr; gap: 4px 10px;
+  margin-top: 2px;
+}
+.export-settings.open { display: grid; }
+.export-settings-title {
+  font-size: 9px; font-family: var(--mono); font-weight: 700;
+  color: var(--text3); text-transform: uppercase; letter-spacing: .08em;
+  grid-column: 1 / -1; margin-bottom: 2px;
+}
+.export-settings label { font-size: 10px !important; }
+.export-settings > div { grid-column: 1 / -1; }
+.scale-btn {
+  flex: 1; padding: 4px; font-family: var(--mono); font-size: 10px; font-weight: 700;
+  background: var(--bg4); border: 1px solid var(--border); color: var(--text3);
+  cursor: pointer; border-radius: 3px; transition: all .15s;
+}
+.scale-btn.active { color: var(--accent); border-color: var(--accent); background: var(--accent-bg); }
+.scale-btn:hover { color: var(--accent); border-color: var(--accent); }
+.bg-btn {
+  flex: 1; padding: 4px; font-family: var(--mono); font-size: 10px; font-weight: 700;
+  background: var(--bg4); border: 1px solid var(--border); color: var(--text3);
+  cursor: pointer; border-radius: 3px; transition: all .15s;
+}
+.bg-btn.active { color: var(--blue); border-color: var(--blue); background: var(--blue-bg); }
+.bg-btn:hover { color: var(--blue); border-color: var(--blue); }
+
+/* Simple pattern */
+/* SEO by-size section */
+.bysize-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px;
+}
+.bysize-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius2);
+  padding: 12px 14px; cursor: pointer; text-decoration: none;
+  display: flex; flex-direction: column; gap: 3px;
+  transition: border-color .2s, background .2s;
+}
+.bysize-card:hover { border-color: var(--accent); background: var(--accent-bg); }
+.bysize-diam { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--accent); line-height: 1; }
+.bysize-label { font-size: 11px; color: var(--text2); }
+.bysize-meta { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+
+/* Odd/Even indicator */
+.parity-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 11px;
+  padding: 5px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg3); color: var(--text2);
+}
+.parity-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); }
+.parity-badge.odd .parity-dot { background: var(--accent); }
+
+/* ════════ PREVIEW PANEL ════════ */
+.preview-panel {
+  display: flex; flex-direction: column;
+  background: var(--bg);
+  height: 100%;        /* fill the fixed tool-area row */
+  min-height: 0;
+  overflow: hidden;    /* Build Materials + Circle Pattern scroll inside */
+}
+
+.preview-toolbar {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  padding: 10px 14px;
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+}
+.tb-group { display: flex; gap: 4px; }
+.tb-sep { width: 1px; background: var(--border); align-self: stretch; margin: 0 4px; }
+.tb-btn {
+  width: 30px; height: 30px;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text2); cursor: pointer; border-radius: var(--radius);
+  font-size: 14px; display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.tb-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-bg); }
+.tb-btn.active { color: var(--accent); border-color: var(--accent); background: var(--accent-bg); }
+.tb-label {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  background: var(--bg3); border: 1px solid var(--border);
+  padding: 4px 8px; border-radius: var(--radius);
+  min-width: 64px; text-align: center;
+}
+.zoom-display { font-family: var(--mono); font-size: 11px; color: var(--text2); min-width: 44px; text-align: center; display: flex; align-items: center; justify-content: center; }
+.tb-spacer { flex: 1; }
+
+/* Canvas area */
+.canvas-wrap {
+  flex: 1 1 0;         /* grow to fill, shrink if needed, but respect min-height */
+  min-height: 200px;   /* always show at least a partial preview */
+  overflow: hidden;
+  position: relative;
+  cursor: grab;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(74,226,144,.04) 0%, transparent 60%),
+    var(--bg);
+}
+.canvas-wrap.grabbing { cursor: grabbing; }
+
+/* #preview-lower removed — info-bar and build-materials are now above canvas */
+.canvas-wrap.fs-active {
+  position: fixed; inset: 0; z-index: 500;
+  cursor: grab;
+}
+.canvas-inner {
+  position: absolute;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+#mainCanvas { display: block; image-rendering: pixelated; }
+
+.empty-hint {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; color: var(--text3);
+  font-family: var(--mono); font-size: 12px; text-align: center;
+  pointer-events: none;
+}
+.empty-hint svg { opacity: .25; }
+
+/* Fullscreen close */
+.fs-close {
+  position: fixed; top: 12px; right: 12px; z-index: 600;
+  width: 36px; height: 36px;
+  background: var(--bg2); border: 1px solid var(--border);
+  color: var(--text); font-size: 18px; cursor: pointer; border-radius: 50%;
+  display: none; align-items: center; justify-content: center;
+}
+.fs-active ~ .fs-close { display: flex; }
+
+/* ════════ BOTTOM SPLIT ════════ */
+/* Preview info bar — compact stats under the canvas */
+#preview-info-bar {
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: 0; padding: 7px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--bg2);
+  font-family: var(--mono); font-size: 11px;
+  flex-shrink: 0;  /* never compressed — always fully visible below canvas */
+}
+.pi-item { display: flex; align-items: center; gap: 6px; padding: 3px 12px; }
+.pi-label { color: var(--text2); }
+.pi-val { color: var(--clr-gold); font-weight: 700; }
+.pi-val.green { color: var(--clr-gold); }
+.pi-sep { width: 1px; height: 14px; background: var(--border); flex-shrink: 0; }
+@media(max-width:600px) {
+  #preview-info-bar { padding: 5px 8px; }
+  .pi-item { padding: 3px 8px; font-size: 10px; }
+}
+
+/* ════════ BUILD MATERIALS ════════ */
+#build-materials {
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--bg2);
+  flex-shrink: 0;  /* never compressed — always fully visible below canvas */
+}
+.bm-title {
+  font-size: 8px; font-family: var(--sans); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .2em;
+  color: var(--clr-gold); margin-bottom: 8px; opacity: .9;
+}
+.bm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+.bm-card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 7px 10px;
+}
+.bm-total { border-color: var(--clr-gold); }
+.bm-lbl {
+  font-size: 9px; font-family: var(--mono); color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em; margin-bottom: 3px;
+}
+.bm-val {
+  font-family: var(--display); font-size: 22px; font-weight: 400;
+  color: var(--clr-teal); line-height: 1.0;
+  text-shadow: 0 0 8px rgba(135,244,149,.25);
+}
+.bm-total .bm-val { font-size: 30px; color: var(--clr-gold); text-shadow: 0 0 10px rgba(255,173,51,.3); }
+.bm-bring {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--clr-gold); margin-top: 4px;
+  padding-top: 4px; border-top: 1px solid rgba(255,179,71,.2);
+  line-height: 1.4; opacity: .85;
+}
+@media(max-width:600px) {
+  .bm-grid { grid-template-columns: 1fr 1fr; }
+  .bm-total { grid-column: 1 / -1; }
+  .bm-val { font-size: 12px; }
+  .bm-total .bm-val { font-size: 16px; }
+}
+
+/* ════════ CIRCLE PATTERN ════════ */
+#circle-pattern {
+  /* Sits inside .controls as a ctrl-section — no extra background/padding */
+  padding-top: 4px;
+}
+.cp-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px; gap: 6px; flex-wrap: wrap;
+}
+.cp-title-wrap { display: flex; flex-direction: column; gap: 1px; }
+.cp-title {
+  font-size: 9px; font-family: var(--mono); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .12em; color: var(--text3);
+}
+.cp-subtitle {
+  font-size: 8px; font-family: var(--mono); color: var(--text3);
+  letter-spacing: .05em; opacity: .7;
+}
+.cp-btns { display: flex; gap: 5px; align-items: center; flex-shrink: 0; }
+.cp-copy-btn {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text2); padding: 3px 10px; border-radius: var(--radius);
+  cursor: pointer; transition: all .15s;
+}
+.cp-copy-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+.cp-copy-btn.copied { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+/* Sequence wrapper */
+.cp-sequence-wrap {
+  max-height: 120px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.cp-sequence-wrap.cp-expanded { max-height: none; overflow-y: visible; }
+.cp-sequence {
+  font-family: var(--mono);
+  display: flex; flex-wrap: wrap; gap: 3px;
+  padding: 2px 0;
+}
+.cp-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 26px; height: 24px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 4px; padding: 0 5px;
+  color: var(--clr-teal); font-size: 11px; font-weight: 700;
+  transition: background .1s;
+}
+.cp-ellipsis {
+  display: inline-flex; align-items: center;
+  color: var(--text3); font-size: 14px; font-weight: 700;
+  padding: 0 4px; align-self: center;
+}
+.cp-more-hint {
+  font-family: var(--mono); font-size: 10px; color: var(--text3);
+  align-self: center; padding-left: 2px; white-space: nowrap;
+}
+/* Expand row */
+.cp-expand-row {
+  margin-top: 7px;
+  display: flex; align-items: center; gap: 8px;
+}
+.cp-expand-btn {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text3); padding: 2px 9px; border-radius: var(--radius);
+  cursor: pointer; transition: all .15s;
+}
+.cp-expand-btn:hover { border-color: var(--text2); color: var(--text2); }
+.cp-expand-btn.cp-hidden { display: none; }
+.cp-count-lbl {
+  font-family: var(--mono); font-size: 10px; color: var(--text3);
+}
+.cp-note {
+  font-size: 10px; color: var(--text3); font-family: var(--mono);
+  margin-top: 8px; line-height: 1.6;
+}
+.cp-seo-text {
+  font-size: 11px; color: var(--text3); line-height: 1.65;
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+/* ════════ SEO CONTENT ════════ */
+.content-section {
+  max-width: 900px; margin: 0 auto;
+  padding: clamp(32px,5vw,64px) 20px;
+}
+.content-section + .content-section {
+  border-top: 1px solid var(--border);
+}
+
+.cs-header { margin-bottom: 24px; }
+.cs-label {
+  font-family: var(--sans); font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .22em;
+  color: var(--clr-teal); margin-bottom: 8px;
+  display: inline-block;
+  border-left: 2px solid var(--clr-teal);
+  padding-left: 6px;
+}
+.cs-title { font-family: var(--sans); font-size: clamp(15px,2.2vw,22px); font-weight: 800; color: var(--text); letter-spacing: .06em; text-transform: uppercase; }
+
+.steps { display: flex; flex-direction: column; gap: 12px; }
+.step {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 14px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius2);
+}
+.step-num {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  background: var(--clr-gold-bg); border: 1px solid var(--clr-gold);
+  font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--clr-gold);
+  display: flex; align-items: center; justify-content: center;
+}
+.step-body h4 { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.step-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0; }
+.step-body p { font-size: 12px; color: var(--text2); line-height: 1.6; }
+
+/* Size chart */
+.size-chart {
+  width: 100%; border-collapse: collapse;
+  font-family: var(--mono); font-size: 12px;
+}
+.size-chart th {
+  text-align: left; color: var(--text3); font-size: 10px; text-transform: uppercase;
+  letter-spacing: .08em; padding: 8px 12px;
+  border-bottom: 1px solid var(--border2);
+}
+.size-chart td { padding: 8px 12px; color: var(--text2); border-bottom: 1px solid var(--border); }
+.size-chart tr:hover td { background: var(--bg2); }
+.size-chart td:first-child { color: var(--clr-teal); font-weight: 700; }
+
+/* FAQ */
+.faq { display: flex; flex-direction: column; gap: 8px; }
+.faq-item { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius2); overflow: hidden; }
+.faq-q {
+  padding: 14px 16px; font-size: 13px; font-weight: 600; color: var(--text);
+  cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+  user-select: none;
+}
+.faq-q::after { content: '▾'; color: var(--text3); font-size: 14px; transition: transform .2s; }
+.faq-item.open .faq-q::after { transform: rotate(180deg); }
+.faq-a {
+  display: none; padding: 0 16px 14px;
+  color: var(--text2); font-size: 13px; line-height: 1.7;
+  border-top: 1px solid var(--border);
+}
+.faq-item.open .faq-a { display: block; padding-top: 12px; }
+
+/* Related tools */
+.related-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(180px,1fr)); gap: 10px; }
+.rel-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius2);
+  padding: 14px; display: flex; flex-direction: column; gap: 6px;
+  transition: border-color .2s; text-decoration: none;
+}
+.rel-card:hover { border-color: var(--border2); }
+.rel-icon { font-size: 22px; }
+.rel-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.rel-desc { font-size: 11px; color: var(--text3); line-height: 1.5; }
+.rel-badge {
+  display: inline-block; font-family: var(--mono); font-size: 10px;
+  color: var(--text3); background: var(--bg3); border: 1px solid var(--border);
+  padding: 2px 6px; border-radius: 3px; margin-top: auto;
+}
+
+
+/* ════════ AUTHOR / WHY USE ════════ */
+.author-section {
+  background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--clr-nature);
+  border-radius: var(--radius2);
+  padding: 28px 32px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+.author-intro {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.author-avatar {
+  width: 42px; height: 42px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.author-meta { display: flex; flex-direction: column; gap: 2px; }
+.author-name { font-family: var(--sans); font-size: 13px; font-weight: 700; color: var(--text); }
+.author-role { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+.author-body { font-size: 14px; color: var(--text2); line-height: 1.85; }
+.author-body p { margin-bottom: 14px; }
+.author-body p:last-child { margin-bottom: 0; }
+.author-features {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 20px 0;
+}
+.af-item {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.af-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.af-text { display: flex; flex-direction: column; gap: 3px; }
+.af-title { font-family: var(--sans); font-size: 12px; font-weight: 700; color: var(--clr-nature); letter-spacing: .03em; }
+.af-desc { font-size: 12px; color: var(--text3); line-height: 1.6; }
+.author-sig {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text3);
+  font-family: var(--mono);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.author-sig::before {
+  content: '';
+  display: inline-block;
+  width: 20px; height: 1px;
+  background: var(--clr-nature);
+}
+@media(max-width:600px) {
+  .author-features { grid-template-columns: 1fr; }
+  .author-section { padding: 20px 16px; }
+}
+
+/* Site footer */
+.site-footer {
+  background: var(--bg2); border-top: 1px solid var(--border);
+  text-align: center; padding: 20px;
+  font-size: 12px; color: var(--text3); font-family: var(--mono);
+}
+.site-footer a { color: var(--text2); text-decoration: none; }
+
+/* ════════ MOBILE OVERRIDES ════════ */
+@media(max-width:900px) {
+  .tool-area { display: flex; flex-direction: column; height: auto; }
+  .preview-panel { order: 1; height: 420px; }
+  .controls { order: 2; border-left: none; border-top: 1px solid var(--border); height: auto; overflow: visible; }
+  .canvas-wrap { min-height: 280px; }
+}
+@media(max-width:600px) {
+  .site-header { padding: 12px 16px; }
+  .page-hero { padding: 10px 16px 8px; }
+  .page-hero h1 { font-size: 15px; }
+  .controls { padding: 10px 10px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 6px; }
+  .stat-box { border-right: none; border: 1px solid var(--border); border-radius: var(--radius); padding: 8px; }
+  .stat-val { font-size: 16px; }
+  .qs-btn { padding: 4px 8px; font-size: 10px; }
+  .preview-toolbar { gap: 4px; }
+  .export-settings { grid-template-columns: 1fr; }
+}
+
+/* ════════ HOVER TOOLTIP ════════ */
+#grid-tooltip {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  pointer-events: none;
+  z-index: 9999;
+  background: rgba(15,17,21,0.92);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text2);
+  box-shadow: 0 4px 20px rgba(0,0,0,.7);
+  display: none;
+  min-width: 160px;
+  backdrop-filter: blur(4px);
+}
+
+#grid-tooltip .tt-row-label {
+  font-size: 11px; color: var(--text3); text-transform: uppercase;
+  letter-spacing: .08em; margin-bottom: 4px;
+}
+#grid-tooltip .tt-row-val { color: var(--clr-teal); font-weight: 700; font-size: 15px; }
+#grid-tooltip .tt-sep { border: none; border-top: 1px solid var(--border); margin: 7px 0; }
+#grid-tooltip .tt-field { display: flex; justify-content: space-between; gap: 16px; }
+#grid-tooltip .tt-key { color: var(--text3); }
+#grid-tooltip .tt-val { color: var(--text); font-weight: 600; }
+#grid-tooltip .tt-hint {
+  font-size: 10px; color: var(--text3); margin-top: 7px;
+  padding-top: 6px; border-top: 1px solid var(--border);
+}
+#grid-tooltip .tt-space-hint {
+  font-size: 10px; font-family: var(--mono); color: var(--clr-redstone);
+  margin-top: 8px; padding: 4px 0;
+  border-top: 1px solid var(--border);
+  letter-spacing: .02em;
+}
+/* Row-lock mode: dim other rows */
+canvas.row-locked { cursor: default; }
+#row-lock-bar {
+  display: none;
+  align-items: center; gap: 10px;
+  padding: 5px 10px;
+  background: rgba(74,226,144,.08);
+  border-top: 1px solid rgba(74,226,144,.2);
+  font-family: var(--mono); font-size: 10px; color: var(--accent);
+}
+#row-lock-bar.active { display: flex; }
+#row-lock-bar .lock-label { flex: 1; }
+#row-lock-bar .lock-keys { color: var(--text3); }
+#row-lock-bar .lock-exit {
+  cursor: pointer; color: var(--text3); padding: 2px 6px;
+  border: 1px solid var(--border); border-radius: 3px; font-size: 10px;
+}
+#row-lock-bar .lock-exit:hover { color: var(--text); border-color: var(--text3); }
+
+/* ════════ CIRCLE PATTERN LIBRARY ════════ */
+.cpl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+.cpl-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 14px 16px;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex; flex-direction: column; gap: 0;
+  transition: border-color .18s, background .18s, transform .15s;
+  position: relative; overflow: hidden;
+}
+.cpl-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--accent);
+  opacity: 0; transition: opacity .18s;
+}
+.cpl-card:hover { border-color: var(--accent); background: var(--accent-bg); transform: translateY(-1px); }
+.cpl-card:hover::before { opacity: 1; }
+.cpl-title {
+  font-size: 13px; font-weight: 700; color: var(--text);
+  margin-bottom: 8px; line-height: 1.3;
+}
+.cpl-title-small { font-size: 11px; color: var(--text3); font-weight: 400; }
+.cpl-preview {
+  width: 40px; height: 40px;
+  margin-bottom: 10px; flex-shrink: 0;
+  image-rendering: pixelated;
+  opacity: .85;
+}
+.cpl-stat-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-top: 4px;
+}
+.cpl-stat-label { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+.cpl-stat-val { font-size: 11px; color: var(--text2); font-family: var(--mono); font-weight: 700; }
+.cpl-stat-val.green { color: var(--accent); }
+.cpl-use {
+  font-size: 11px; color: var(--text3); margin-top: 8px;
+  padding-top: 8px; border-top: 1px solid var(--border);
+  line-height: 1.4;
+}
+@media(max-width:600px) {
+  .cpl-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+}
+</style>
+<script type="application/ld+json">
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Minecraft Circle Generator",
+    "url": "https://example.com/minecraft-circle-generator",
+    "description": "Free browser tool to generate pixel-perfect Minecraft circles, ovals, and ellipses with block counts, row patterns, and PNG/SVG export.",
+    "applicationCategory": "UtilityApplication",
+    "operatingSystem": "Any",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "featureList": [
+      "Hollow and filled circle generation",
+      "Custom oval and ellipse support",
+      "Block count and stack calculator",
+      "Row pattern builder",
+      "PNG and SVG blueprint export",
+      "Zoom and pan preview",
+      "Coordinate overlay"
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do you build a circle in Minecraft?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use a Minecraft circle generator to get the correct circle pattern — a sequence of block counts from the top of the circle down to the center. Place the center block, extend the axes outward, then follow the row sequence placing blocks left and right of center for each row. Mirror the pattern below "
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What's the difference between odd and even diameter circles?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "An odd-diameter circle (e.g. 21) has a true single-block center, making it easier to place symmetrically around a central column. An even-diameter circle (e.g. 20) has a 4-block center — there's no single block at the exact center. For most Minecraft builds, odd diameters are recommended."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What's the difference between Hollow and Filled?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Hollow generates only the outer ring of blocks — the circle outline. Filled fills every block inside the circle boundary, creating a solid disc. Border+ draws a thicker outline ring, useful for walls that need to be more than 1 block deep."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I use the Build Guide to actually build in Minecraft?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Find the center of your build area. Then use the Row Guide table from top to bottom. Each row tells you the Y offset from center, how many blocks to place, and how far left and right of center. Place the center row first, then work outward symmetrically. The guide accounts for symmetry, so each row "
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why doesn't my Minecraft circle look perfectly round?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Minecraft uses square blocks, so true mathematical circles can't be perfectly represented. The Bresenham algorithm gives the best possible approximation, but some &quot;staircase&quot; artifacts are unavoidable — especially at smaller diameters. Larger circles (25+) look noticeably rounder. This is an inheren"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I generate ovals and ellipses too?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes! Simply turn off the Force Circle toggle and enter different values for Width and Height. The generator will compute an ellipse using the correct semi-axis ratios, giving you a stretched circle in any proportion."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What does &quot;Stacks of 64&quot; mean in the block count?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "In Minecraft, most items stack to 64 per inventory slot. The &quot;Stacks of 64&quot; figure tells you how many full inventory stacks of blocks you need to gather before starting your build. This makes material planning much faster."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a Minecraft circle pattern?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A Minecraft circle pattern is the sequence of block counts for each row, read from the top of the circle to the center. For example, a 21×21 hollow circle has the pattern 1, 1, 1, 3, 3, 3, 5, 7, 7, 7, 7. Builders memorize or copy this sequence so they can place blocks row by row without checking the"
+      }
+    }
+    ]
+  }
+]
+</script>
+
+  <!-- ════ Canonical ════ -->
+  <link rel="canonical" href="https://mccirclegenerator.com/"/>
+
+  <!-- ════ Open Graph ════ -->
+  <meta property="og:type"        content="website"/>
+  <meta property="og:site_name"   content="MC Circle Generator"/>
+  <meta property="og:url"         content="https://mccirclegenerator.com/"/>
+  <meta property="og:title"       content="Minecraft Circle Generator — Free Pixel-Perfect Circle Tool"/>
+  <meta property="og:description" content="Generate pixel-perfect Minecraft circles, ovals, hollow and filled shapes. Get block counts, row-by-row build guide, and export PNG/SVG blueprints — free, no signup."/>
+  <meta property="og:image"       content="https://mccirclegenerator.com/og-image.png"/>
+  <meta property="og:image:alt"   content="Minecraft Circle Generator — pixel circle preview with block grid"/>
+  <meta property="og:image:width" content="1200"/>
+  <meta property="og:image:height" content="630"/>
+
+  <!-- ════ Twitter Cards ════ -->
+  <meta name="twitter:card"        content="summary_large_image"/>
+  <meta name="twitter:title"       content="Minecraft Circle Generator — Free Pixel-Perfect Circle Tool"/>
+  <meta name="twitter:description" content="Generate pixel-perfect Minecraft circles, ovals, hollow and filled shapes. Export PNG/SVG blueprints — free, no signup."/>
+  <meta name="twitter:image"       content="https://mccirclegenerator.com/og-image.png"/>
+  <meta name="twitter:image:alt"   content="Minecraft Circle Generator tool preview"/>
+</head>
+<body>
+
+<!-- ════ HEADER ════ -->
+<header class="site-header">
+  <div class="logo-mark">
+    <span></span><span></span><span></span>
+    <span></span><span></span><span></span>
+    <span></span><span></span><span></span>
+  </div>
+  <div class="site-title"><em>Minecraft</em> Circle Generator</div>
+</header>
+
+<!-- ════ HERO ════ -->
+<div class="page-hero">
+  <h1>Minecraft Circle Generator</h1>
+  <p>Generate pixel-perfect Minecraft circles, ovals, hollow and filled shapes. View block counts, build guide, zoom the blueprint, and export PNG/SVG — all in one tool.</p>
+</div>
+
+<!-- ════ QUICK SIZES BAR ════ -->
+<div class="quick-sizes">
+  <span class="qs-label">Quick:</span>
+  <button class="qs-btn" data-size="3">3</button>
+  <button class="qs-btn" data-size="5">5</button>
+  <button class="qs-btn" data-size="7">7</button>
+  <button class="qs-btn" data-size="9">9</button>
+  <button class="qs-btn" data-size="11">11</button>
+  <button class="qs-btn" data-size="13">13</button>
+  <button class="qs-btn" data-size="15">15</button>
+  <button class="qs-btn" data-size="17">17</button>
+  <button class="qs-btn" data-size="19">19</button>
+  <button class="qs-btn" data-size="21">21</button>
+  <button class="qs-btn" data-size="25">25</button>
+  <button class="qs-btn" data-size="31">31</button>
+  <button class="qs-btn" data-size="65">65</button>
+</div>
+
+<div class="tool-area" id="tool-area">
+  <h2 class="sr-only">Minecraft Circle Generator Tool</h2>
+
+  <!-- ── PREVIEW PANEL (left) ── -->
+  <div class="preview-panel" id="preview-panel">
+
+    <!-- Toolbar -->
+    <div class="preview-toolbar">
+      <div class="tb-group">
+        <button class="tb-btn" id="tb-zoomin" title="Zoom In">+</button>
+        <span class="zoom-display" id="zoom-display">100%</span>
+        <button class="tb-btn" id="tb-zoomout" title="Zoom Out">−</button>
+      </div>
+      <div class="tb-sep"></div>
+      <div class="tb-group">
+        <button class="tb-btn" id="tb-fit" title="Fit to Screen">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M1 1h4v2H3v2H1V1zm10 0h4v4h-2V3h-2V1zM1 11h2v2h2v2H1v-4zm12 2h2v-2h-2v4h-4v-2h2v-2z"/></svg>
+        </button>
+        <button class="tb-btn" id="tb-reset" title="Reset Zoom (100%)">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2zm0 2a4 4 0 1 1 0 8A4 4 0 0 1 8 4z"/><path d="M8 6v4M6 8h4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+        </button>
+        <button class="tb-btn" id="tb-fs" title="Fullscreen">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M1 1h4v1.5H2.5V4H1V1zm10 0h4v3h-1.5V2.5H11V1zM1 12h1.5v1.5H4V15H1v-3zm11 1.5h1.5V12H15v3h-3v-1.5z"/></svg>
+        </button>
+      </div>
+      <div class="tb-sep"></div>
+      <div class="tb-group">
+        <div class="tb-label" id="tb-size">–</div>
+      </div>
+      <div class="tb-spacer"></div>
+      <div class="tb-group">
+        <span style="font-size:10px;color:var(--text3);font-family:var(--mono)">Ctrl+Scroll=zoom · Drag=pan</span>
+      </div>
+    </div>
+
+    <!-- Canvas — primary viewport -->
+    <div class="canvas-wrap" id="canvas-wrap">
+      <div class="canvas-inner" id="canvas-inner">
+        <canvas id="mainCanvas"></canvas>
+      </div>
+      <div class="empty-hint" id="empty-hint" style="display:none">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="9"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/>
+        </svg>
+        <p>Set dimensions above and generate your circle</p>
+      </div>
+      <!-- Tooltip: fixed inside canvas-wrap top-left -->
+      <div id="grid-tooltip">
+        <div class="tt-row-label">Row</div>
+        <div class="tt-row-val" id="tt-row">–</div>
+        <hr class="tt-sep"/>
+        <div class="tt-field">
+          <span class="tt-key">Blocks</span>
+          <span class="tt-val" id="tt-blocks">–</span>
+        </div>
+        <div class="tt-field">
+          <span class="tt-key">Left</span>
+          <span class="tt-val" id="tt-left">–</span>
+        </div>
+        <div class="tt-field">
+          <span class="tt-key">Right</span>
+          <span class="tt-val" id="tt-right">–</span>
+        </div>
+        <hr class="tt-sep"/>
+        <div class="tt-row-label">Cell</div>
+        <div class="tt-field">
+          <span class="tt-key">X</span>
+          <span class="tt-val" id="tt-cx">–</span>
+        </div>
+        <div class="tt-field">
+          <span class="tt-key">Y</span>
+          <span class="tt-val" id="tt-cy">–</span>
+        </div>
+        <div class="tt-space-hint" id="tt-space-hint">␣ Space to place / remove</div>
+        <div class="tt-hint" id="tt-hint">Click canvas to lock · ↑↓ to step</div>
+      </div>
+    </div>
+
+    <!-- Preview Info Bar — below canvas, always visible -->
+    <div id="preview-info-bar">
+      <span class="pi-item"><span class="pi-label">Total Blocks</span><span class="pi-val green" id="i-totalblocks">—</span></span>
+      <span class="pi-sep"></span>
+      <span class="pi-item"><span class="pi-label">Max Width</span><span class="pi-val" id="i-maxw">—</span></span>
+      <span class="pi-sep"></span>
+      <span class="pi-item"><span class="pi-label">Radius</span><span class="pi-val" id="i-radius">—</span></span>
+      <span class="pi-sep"></span>
+      <span class="pi-item"><span class="pi-label">Mode</span><span class="pi-val green" id="i-rowpattern">—</span></span>
+    </div>
+
+    <!-- Build Materials Panel — below canvas, always visible -->
+    <div id="build-materials">
+      <div class="bm-title">Build Materials</div>
+      <div class="bm-grid">
+        <div class="bm-card bm-total">
+          <div class="bm-lbl">Total Blocks</div>
+          <div class="bm-val" id="bm-total">—</div>
+        </div>
+        <div class="bm-card">
+          <div class="bm-lbl">Stacks of 64</div>
+          <div class="bm-val" id="bm-s64-main">—</div>
+          <div class="bm-bring" id="bm-s64-bring"></div>
+        </div>
+        <div class="bm-card">
+          <div class="bm-lbl">Stacks of 16</div>
+          <div class="bm-val" id="bm-s16-main">—</div>
+          <div class="bm-bring" id="bm-s16-bring"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row lock status bar -->
+    <div id="row-lock-bar">
+      <span class="lock-label">🔒 <span id="lock-row-label">Row 0</span> locked</span>
+      <span class="lock-keys">↑ ↓ to step rows</span>
+      <span class="lock-exit" id="lock-exit-btn">✕ Unlock</span>
+    </div>
+
+  </div><!-- /preview-panel -->
+
+  <!-- ── CONTROLS (right) ── -->
+  <aside class="controls">
+
+    <!-- Dimensions -->
+    <div class="ctrl-section">
+      <h3 class="ctrl-section-title">Dimensions</h3>
+      <div class="input-row">
+        <div class="input-group">
+          <label for="inp-w">Width</label>
+          <input class="num-input" id="inp-w" type="number" value="21" min="2" max="999"/>
+          <div class="nudge-row">
+            <button class="nudge-btn" data-axis="w" data-delta="-2">−2</button>
+            <button class="nudge-btn" data-axis="w" data-delta="-1">−1</button>
+            <button class="nudge-btn" data-axis="w" data-delta="1">+1</button>
+            <button class="nudge-btn" data-axis="w" data-delta="2">+2</button>
+          </div>
+        </div>
+        <button class="link-btn linked" id="link-btn" title="Force Circle">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M5.5 7a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm5 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm-5 4a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm5 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+            <path d="M5.5 5.5v5M10.5 5.5v5M5.5 8h5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          </svg>
+        </button>
+        <div class="input-group">
+          <label for="inp-h">Height</label>
+          <input class="num-input" id="inp-h" type="number" value="21" min="2" max="999"/>
+          <div class="nudge-row">
+            <button class="nudge-btn" data-axis="h" data-delta="-2">−2</button>
+            <button class="nudge-btn" data-axis="h" data-delta="-1">−1</button>
+            <button class="nudge-btn" data-axis="h" data-delta="1">+1</button>
+            <button class="nudge-btn" data-axis="h" data-delta="2">+2</button>
+          </div>
+        </div>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label" style="font-weight:600;color:var(--text)">Force Circle</span>
+        <label class="toggle-wrap">
+          <input type="checkbox" id="toggle-force" checked/>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Mode -->
+    <div class="ctrl-section">
+      <h3 class="ctrl-section-title">Shape Mode</h3>
+      <div class="mode-group">
+        <button class="mode-btn active" data-mode="hollow">Hollow</button>
+        <button class="mode-btn" data-mode="filled">Filled</button>
+        <button class="mode-btn" data-mode="border">Border+</button>
+      </div>
+    </div>
+
+    <!-- Display -->
+    <div class="ctrl-section">
+      <h3 class="ctrl-section-title">Display Options</h3>
+      <div class="toggle-row">
+        <span class="toggle-label">Grid Lines</span>
+        <label class="toggle-wrap"><input type="checkbox" id="opt-grid" checked/><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Axes / Guides</span>
+        <label class="toggle-wrap"><input type="checkbox" id="opt-axes" checked/><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Coordinates</span>
+        <label class="toggle-wrap"><input type="checkbox" id="opt-coords"/><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Highlight Max Row</span>
+        <label class="toggle-wrap"><input type="checkbox" id="opt-maxrow" checked/><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+
+    <!-- Export -->
+    <div class="ctrl-section">
+      <h3 class="ctrl-section-title">Export Blueprint</h3>
+      <div class="export-settings">
+        <div class="export-settings-title">Options</div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text2);cursor:pointer">
+          <input type="checkbox" id="exp-grid" checked style="accent-color:var(--accent)"/> Grid lines
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text2);cursor:pointer">
+          <input type="checkbox" id="exp-axes" checked style="accent-color:var(--accent)"/> Axis guides
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text2);cursor:pointer">
+          <input type="checkbox" id="exp-coords" checked style="accent-color:var(--accent)"/> Coordinates
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text2);cursor:pointer">
+          <input type="checkbox" id="exp-center" checked style="accent-color:var(--accent)"/> Center marker
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text2);cursor:pointer">
+          <input type="checkbox" id="exp-title" checked style="accent-color:var(--accent)"/> Title
+        </label>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px">
+          <button class="scale-btn" data-scale="1">1×</button>
+          <button class="scale-btn active" data-scale="2">2×</button>
+          <button class="scale-btn" data-scale="4">4×</button>
+          <button class="bg-btn active" data-bg="dark" style="margin-left:4px">Dark</button>
+          <button class="bg-btn" data-bg="transparent">Transp.</button>
+        </div>
+      </div>
+      <div class="export-row" style="margin-top:6px">
+        <button class="btn btn-accent" id="btn-png">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M8 12L3 7h3V2h4v5h3L8 12z"/><path d="M2 14h12v-2H2v2z"/></svg>
+          PNG
+        </button>
+        <button class="btn btn-ghost" id="btn-svg">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M8 12L3 7h3V2h4v5h3L8 12z"/><path d="M2 14h12v-2H2v2z"/></svg>
+          SVG
+        </button>
+      </div>
+    </div>
+
+    <!-- Circle Pattern (in controls) -->
+    <div class="ctrl-section" id="circle-pattern">
+      <div class="cp-header">
+        <div class="cp-title-wrap">
+          <h3 class="cp-title">Circle Pattern</h3>
+          <span class="cp-subtitle">Blocks per row · top to center</span>
+        </div>
+        <div class="cp-btns">
+          <button id="cp-copy-btn" class="cp-copy-btn" title="Copy full pattern">Copy Pattern</button>
+        </div>
+      </div>
+      <div class="cp-sequence-wrap" id="cp-sequence-wrap">
+        <div class="cp-sequence" id="cp-sequence">—</div>
+      </div>
+      <div class="cp-expand-row">
+        <button id="cp-expand-btn" class="cp-expand-btn cp-hidden">Show Full Pattern</button>
+        <span class="cp-count-lbl" id="cp-count-lbl"></span>
+      </div>
+      <div class="cp-note">This pattern shows how many blocks each row contains when building the circle. Hover the preview grid above to see exact block positions.</div>
+    </div>
+
+  </aside>
+
+</div><!-- /tool-area -->
+
+<!-- ════ FULLSCREEN CLOSE ════ -->
+<button class="fs-close" id="fs-close-btn">✕</button>
+
+<!-- ════ SEO CONTENT ════ -->
+<div style="border-top:1px solid var(--border)">
+
+  <!-- ════ AUTHOR / WHY USE ════ -->
+  <div class="content-section">
+    <div class="cs-header">
+      <div class="cs-label">From the Builder</div>
+      <h2 class="cs-title">Why Use Our Minecraft Circle Generator?</h2>
+    </div>
+
+    <div class="author-section">
+      <div class="author-intro">
+        <div class="author-avatar"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAAABUCAYAAAAcaxDBAAAGXklEQVR4nO2dv2scRxTHn4JJ4CTCNm6cI1xpCRdC16kQKVQ5IIxK6z9I4SKNuxT6A1K4yH8gl8EcOFUKk+I6CxXGSbkEXRo1i9AZbAyXIvdWs3Pz472Z9+buRL5gfLrdfTPz2ffm183ObsCKaf/p/oxz/vjleEMrLylaama48KhaJuTiCccgXl5csuz1d/vB46XhFknMB5ELjyof5BJwVRNwgdSC6JMLribYbMP7P+zMxr+879hZBZC2KGBdZeFKBCgAAGbEhLlsiD6ZcBGqXY5Uibg+Zgaaqv1uVWGiOh5bNQCQDxMA4ItcAx1VDUDVrDxMgPkNn+dXUtlAXfVl/7utXLPqcuVRol+c7OJ2XenK4OWbm1TzqvLl1VW3cpV0kavh8XklF+qjJ+GOuq13r5gDgUg+c6GyL/C14qEwD0HlAowpBJiaxxyorJNDXSJKvYmZloboE8Ll5A2VCpV8IqV/Scl4VVXUJEXUNE30HF8EpUBlt/K5XSJKAaWUm1ZKWUlA0TtzYFZV1f4rJYk0sczULlXUjbkw7bAvHeIx2V5L7YVg+MdC/17oYGpH9/LNTVbDUw2+Jp3X1Nd82/Mb/O6Vu+8c0/7T/VkIapB2aqhzYVIBxsQFzO7DErzUe0AbphREn6hwpaE6v0ydgqPAfH38ceG7k/P75DRCOtu7Wvju+1+/il7HgRrrSgWBSsJ0gbSVCtYF0lYMbApUElBtmN8c/blwfDLabj9zoZowY7ZLQA228hJCmGZhR88+dM7BY5PRNpztXZGhIky83rZ79KLXsf36+COpCsiR97cgqoeGvNOGaRfY1tGLXutRMagmTIpdgFtvDUGleqmvLnWOlDRm3GOFpp5Tym5MPkayP4EYcoU66uC0B8PnMzg47S0cw/NDDY0d6qaGz2dR25QGMlUtUI3GCGV6yMFpD6bTKQAATKfThYJzvMk+17Zl/k21yxmUuMb5Kh4a67Rvbm52/l+GtAYW6q28T1owl3mTAOYeKjE9h9IeUkpKIq922Ks1Sj798dOH4N+rapsqtZA/Ob8PZ3tXMBltL/QVQwUdHg7b62O2h4dDePv7284xn21OHzdHxT30rksVKHrCZLTdjlZConinbRuvCamUdwIAbOQ2SHa/zVXR2xMYdp/QhJIzOWKHvwnSZ9ueN+XOj6JwKFqk24R1HkB39sd1Xo5t21snh3m2UyQOtKmvnV6KBXINKfHYz1/+lZTmyfnDqG1fXqWVHfIAtLCnigv1x08Pk9OSCneA25BXaZRy7nwOII40vBNACGjOnc2RJHypMoh5qJ0hbS9dlVC3JRrypaGmSBMmgEIdWgJqKmxtmACFhp6SDYAUTC0VG8unFkgi9EvBBFDo2Id+QsCCmf3U+uLvqM1jMOcBwucPdr9dSM+nR0/64mHfefpNYoLZBTS08NUEIKHQDXItrZQAai56EPVQE6YJMbRG1DdUTVFTX4fTcuRJ2kvlx/LzTHMW2tqhqbU+1MxTSj4pEgcqkcESjYjWymoxoDkrlqUeZEiFJBn27Zoc6Ylmn1zwpLwlx3buxDKub1KfYLYLqfkQg8t2yfQBlIE2TbP0p0Ds9LXz1I6U0GVju8xwtGyYLknmybXodmlLcVxKbZxW6cY5gfZ3++q7Mkg2TpoNnU++SO4AHb8cb2jt9oXS6FCHGiNtsMXX2KNKFRCF6ZROV+yxGoByz8FLS/Lhr6CHlqhLbXEbptINUqwX5ARaoi5F5Xa8S3fcUaxHE1Ga6+616jauXakn6FCkn0AkO/sAt6MVDW9Cu9I7R1AZBIGmbLNDueMlwpKSRsqESIxJ1EM1hqTrJupuDgDEkOdCXdbSHI64jyCq7YpzF6CmPM9JFRmoeYfWGWruw7ExsTx03aFqwwRICPl1hVoCJkDiUpx1g1oKJoDEHsyJmxbUFzUMdgdZacdslASJktmDmQl1a/C5/ZwKtb6ovTYkd7nhSmw/d3syxQfWhAkAcFPfY0/7mTABboGmggSQ29tefIP8mLfaQAH+g2oqBtgG6rIRkrRXmlJ544DvxQAu79wafGbBSLVR6o0LxV5d0TT1wnGEgZ9j8nl3yMbavbqCop3HD1qwVTVo4SIAioeZMF0QTRt39uUqpnYeP5i9/+0f5y8BCLiqBsFeggs8wjNtmLqTr//x6f8XVBXQur9C7V/tPNs0/eHTBgAAAABJRU5ErkJggg==" width="42" height="42" alt="MC Circle Generator owl mascot" style="border-radius:4px;display:block"/></div>
+        <div class="author-meta">
+          <span class="author-name">The MC Circle Generator Team</span>
+          <span class="author-role">mccirclegenerator.com · Builder's Note</span>
+        </div>
+      </div>
+
+      <div class="author-body">
+        <p>
+          Most Minecraft circle generators online give you a grid and nothing else. We built this tool because we
+          kept running into the same frustrations — no way to check row by row, no coordinates to orient yourself,
+          no support for ovals. So we fixed all of that.
+        </p>
+
+        <div class="author-features">
+          <div class="af-item">
+            <div class="af-icon">🎯</div>
+            <div class="af-text">
+              <h3 class="af-title">Coordinate Overlay</h3>
+              <span class="af-desc">Enable X/Y coordinates directly on the preview grid. Know exactly where every block sits — no manual counting from the edge.</span>
+            </div>
+          </div>
+          <div class="af-item">
+            <div class="af-icon">⌨️</div>
+            <div class="af-text">
+              <h3 class="af-title">Row-by-Row Navigation</h3>
+              <span class="af-desc">Use ↑ ↓ arrow keys to step through each row. The locked row highlights so you never lose your place mid-build.</span>
+            </div>
+          </div>
+          <div class="af-item">
+            <div class="af-icon">⭕</div>
+            <div class="af-text">
+              <h3 class="af-title">Circles &amp; Ellipses</h3>
+              <span class="af-desc">Disable Force Circle and set independent Width &amp; Height to generate any oval or ellipse — not just perfect circles.</span>
+            </div>
+          </div>
+          <div class="af-item">
+            <div class="af-icon">📱</div>
+            <div class="af-text">
+              <h3 class="af-title">Works on Any Device</h3>
+              <span class="af-desc">Fully responsive on PC, tablet and mobile. Keep the blueprint open on your phone while building in-game on your PC.</span>
+            </div>
+          </div>
+          <div class="af-item">
+            <div class="af-icon">⚡</div>
+            <div class="af-text">
+              <h3 class="af-title">Instant Preview</h3>
+              <span class="af-desc">Every change updates the grid in real time. Adjust size, switch modes, toggle options — results appear immediately.</span>
+            </div>
+          </div>
+          <div class="af-item">
+            <div class="af-icon">📤</div>
+            <div class="af-text">
+              <h3 class="af-title">PNG &amp; SVG Export</h3>
+              <span class="af-desc">Download a full blueprint with grid lines, axis guides, coordinates and title baked in. Works for Java and Bedrock editions.</span>
+            </div>
+          </div>
+        </div>
+
+        <p>
+          Whether you're placing a <strong style="color:var(--text)">small 7×7 chimney cap</strong>, a
+          <strong style="color:var(--text)">21×21 arena floor</strong>, or a
+          <strong style="color:var(--text)">65×65 mega-build foundation</strong>, the goal is the same —
+          get the right blocks in the right place without the guesswork. That's what this tool is built for.
+        </p>
+      </div>
+
+      <div class="author-sig">Built for Minecraft builders, by Minecraft builders.</div>
+    </div>
+  </div>
+
+  <div class="content-section">
+    <div class="cs-header">
+      <div class="cs-label">About This Tool</div>
+      <h2 class="cs-title">About Our Minecraft Circle Generator</h2>
+    </div>
+    <div class="cs-header">
+      <h3 class="cs-title">What Is a Minecraft Circle Generator?</h3>
+    </div>
+    <p style="color:var(--text2);font-size:14px;line-height:1.8;max-width:720px">
+      A Minecraft Circle Generator is a free browser tool that computes the best block layout for a circular shape in Minecraft's square-grid world. Because Minecraft only has cubic blocks, true circles must be approximated — this tool uses the <strong style="color:var(--text)">Bresenham midpoint circle algorithm</strong> to find the most accurate placement for any diameter. You get a live block-grid preview, a row-by-row build guide, and instant PNG/SVG export.
+    </p>
+  </div>
+
+  <div class="content-section">
+    <div class="cs-header">
+      <div class="cs-label">How to Use</div>
+      <h2 class="cs-title">How to Use the Minecraft Circle Generator</h2>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-body"><h3 class="step-title">Enter Your Circle Diameter</h3><p>Type your desired diameter in the Width and Height fields. Enable <em>Force Circle</em> to keep them equal. Use the Quick buttons for common sizes.</p></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body"><h3 class="step-title">Choose Circle Type (Hollow / Filled / Border+)</h3><p><strong>Hollow</strong> = ring outline only. <strong>Filled</strong> = solid disc. <strong>Border+</strong> = outline plus inner ring, good for thick walls.</p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body"><h3 class="step-title">Read the Circle Pattern</h3><p>The <strong>Circle Pattern</strong> panel shows how many blocks each row needs from top to center. Memorize or copy the sequence, then mirror it to complete the full circle.</p></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-body"><h3 class="step-title">Export & Download Blueprint</h3><p>Download a PNG or SVG blueprint to keep on a second screen. The filename includes the dimensions and mode, so you'll always know which file is which.</p></div></div>
+    </div>
+  </div>
+
+  <!-- SEO: Circle Pattern -->
+  <div class="content-section">
+    <div class="cs-header">
+      <div class="cs-label">Circle Blueprint</div>
+      <h2 class="cs-title">Minecraft Circle Blueprint</h2>
+    </div>
+    <div class="cs-header">
+      <h3 class="cs-title">Minecraft Circle Pattern</h3>
+    </div>
+    <p style="color:var(--text2);font-size:14px;line-height:1.8;max-width:720px">
+      When building circles in Minecraft, many builders memorize the <strong style="color:var(--text)">block pattern for each row</strong> instead of constantly checking the grid. The <strong style="color:var(--text)">Circle Pattern</strong> panel above automatically calculates this sequence so you can see exactly how many blocks each row needs — from the top of the circle down to the center row.
+    </p>
+    <p style="color:var(--text2);font-size:14px;line-height:1.8;max-width:720px;margin-top:12px">
+      For example, a <strong style="color:var(--text)">21×21 hollow Minecraft circle</strong> follows the row pattern:
+    </p>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:12px 16px;margin:12px 0;max-width:480px;font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:.04em">
+      1, 1, 1, 3, 3, 3, 5, 7, 7, 7, 7
+    </div>
+    <p style="color:var(--text2);font-size:14px;line-height:1.8;max-width:720px">
+      Each number is the block count for one row. Build the top half using this sequence, then mirror it below the center to complete the circle. The <strong style="color:var(--text)">Copy Pattern</strong> button lets you paste this sequence into a notepad or game chat for quick reference while building.
+    </p>
+
+    <div class="cs-header" style="margin-top:32px;margin-bottom:16px">
+      <div class="cs-label">Building Guide</div>
+      <h3 class="cs-title">Minecraft Circle Building Guide</h3>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-body"><h4 class="step-title">Step 1 — Place the Center Block</h4><p>Mark your starting position. For odd diameters this is a single block; for even diameters the center falls between 4 blocks.</p></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body"><h4 class="step-title">Step 2 — Extend the Main Axes</h4><p>Place blocks outward in all four cardinal directions (north, south, east, west) to mark the full radius of the circle.</p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body"><h4 class="step-title">Step 3 — Follow the Circle Pattern</h4><p>Use the <strong>Circle Pattern</strong> sequence from top to center. Each number tells you how many blocks to place in that row, centered on the axis.</p></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-body"><h4 class="step-title">Step 4 — Mirror to Complete</h4><p>Repeat the pattern in reverse below the center row. The circle is symmetric — every row above the center has an identical mirror row below.</p></div></div>
+    </div>
+  </div>
+
+  <div class="content-section">
+    <div class="cs-header">
+      <div class="cs-label">Reference</div>
+      <h2 class="cs-title">Minecraft Circle Sizes & Templates</h2>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="size-chart">
+        <thead><tr><th>Diameter</th><th>Type</th><th>Hollow Blocks</th><th>Filled Blocks</th><th>Stacks (64)</th><th>Typical Usage</th></tr></thead>
+        <tbody>
+          <tr><td>3</td><td>Odd</td><td>8</td><td>9</td><td>1</td><td>Tiny detail, pixel art</td></tr>
+          <tr><td>5</td><td>Odd</td><td>12</td><td>21</td><td>1</td><td>Small windows, accents</td></tr>
+          <tr><td>7</td><td>Odd</td><td>20</td><td>37</td><td>1</td><td>Well rims, chimneys</td></tr>
+          <tr><td>9</td><td>Odd</td><td>28</td><td>57</td><td>1</td><td>Small ponds, paths</td></tr>
+          <tr><td>11</td><td>Odd</td><td>36</td><td>89</td><td>2</td><td>Tower bases, ponds</td></tr>
+          <tr><td>13</td><td>Odd</td><td>44</td><td>129</td><td>3</td><td>Compact arenas</td></tr>
+          <tr><td>15</td><td>Odd</td><td>52</td><td>177</td><td>3</td><td>Medium platforms</td></tr>
+          <tr><td>17</td><td>Odd</td><td>60</td><td>229</td><td>4</td><td>Decorative rings</td></tr>
+          <tr><td>19</td><td>Odd</td><td>68</td><td>285</td><td>5</td><td>Medium towers</td></tr>
+          <tr><td>21</td><td>Odd</td><td>72</td><td>345</td><td>6</td><td>Arena floors, domes</td></tr>
+          <tr><td>25</td><td>Odd</td><td>88</td><td>493</td><td>8</td><td>Large towers</td></tr>
+          <tr><td>31</td><td>Odd</td><td>108</td><td>761</td><td>12</td><td>Grand arenas</td></tr>
+          <tr><td>33</td><td>Odd</td><td>116</td><td>861</td><td>14</td><td>Coliseum floors</td></tr>
+          <tr><td>65</td><td>Odd</td><td>228</td><td>3341</td><td>53</td><td>Mega builds</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SEO: Circle Pattern Library -->
+  <div class="content-section">
+    <div class="cs-header">
+      <div class="cs-label">Pattern Library</div>
+      <h2 class="cs-title">Minecraft Circle Pattern Library</h2>
+      <p style="color:var(--text2);font-size:13px;margin-top:8px">Click any card to instantly load that circle into the generator. Each card shows a live block-grid preview, hollow block count, filled block count, and typical Minecraft building use.</p>
+    </div>
+    <div class="cpl-grid" id="cpl-grid">
+      <a class="cpl-card" data-bs="3" href="javascript:void(0)">
+        <canvas class="cpl-preview" id="cpl-c3" width="40" height="40"></canvas>
+        <strong class="cpl-title">Minecraft Circle 3 Pattern</strong>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Diameter</span>
+          <span class="cpl-stat-val green">3</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Hollow blocks</span>
+          <span class="cpl-stat-val">8</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Filled blocks</span>
+          <span class="cpl-stat-val">9</span>
+        </div>
+        <p class="cpl-use">📍 Pixel art, tiny accents</p>
+      </a>
+      <a class="cpl-card" data-bs="5" href="javascript:void(0)">
+        <canvas class="cpl-preview" id="cpl-c5" width="40" height="40"></canvas>
+        <strong class="cpl-title">Minecraft Circle 5 Pattern</strong>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Diameter</span>
+          <span class="cpl-stat-val green">5</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Hollow blocks</span>
+          <span class="cpl-stat-val">12</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Filled blocks</span>
+          <span class="cpl-stat-val">21</span>
+        </div>
+        <p class="cpl-use">📍 Small windows, torches</p>
+      </a>
+      <a class="cpl-card" data-bs="7" href="javascript:void(0)">
+        <canvas class="cpl-preview" id="cpl-c7" width="40" height="40"></canvas>
+        <strong class="cpl-title">Minecraft Circle 7 Pattern</strong>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Diameter</span>
+          <span class="cpl-stat-val green">7</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Hollow blocks</span>
+          <span class="cpl-stat-val">20</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Filled blocks</span>
+          <span class="cpl-stat-val">37</span>
+        </div>
+        <p class="cpl-use">📍 Well rims, chimneys</p>
+      </a>
+      <a class="cpl-card" data-bs="9" href="javascript:void(0)">
+        <canvas class="cpl-preview" id="cpl-c9" width="40" height="40"></canvas>
+        <strong class="cpl-title">Minecraft Circle 9 Pattern</strong>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Diameter</span>
+          <span class="cpl-stat-val green">9</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Hollow blocks</span>
+          <span class="cpl-stat-val">28</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Filled blocks</span>
+          <span class="cpl-stat-val">57</span>
+        </div>
+        <p class="cpl-use">📍 Ponds, small roofs</p>
+      </a>
+      <a class="cpl-card" data-bs="11" href="javascript:void(0)">
+        <canvas class="cpl-preview" id="cpl-c11" width="40" height="40"></canvas>
+        <strong class="cpl-title">Minecraft Circle 11 Pattern</strong>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Diameter</span>
+          <span class="cpl-stat-val green">11</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Hollow blocks</span>
+          <span class="cpl-stat-val">36</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Filled blocks</span>
+          <span class="cpl-stat-val">89</span>
+        </div>
+        <p class="cpl-use">📍 Tower bases, fountains</p>
+      </a>
+      <a class="cpl-card" data-bs="13" href="javascript:void(0)">
+        <canvas class="cpl-preview" id="cpl-c13" width="40" height="40"></canvas>
+        <strong class="cpl-title">Minecraft Circle 13 Pattern</strong>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Diameter</span>
+          <span class="cpl-stat-val green">13</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Hollow blocks</span>
+          <span class="cpl-stat-val">44</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Filled blocks</span>
+          <span class="cpl-stat-val">129</span>
+        </div>
+        <p class="cpl-use">📍 Compact arenas, pools</p>
+      </a>
+      <a class="cpl-card" data-bs="17" href="javascript:void(0)">
+        <canvas class="cpl-preview" id="cpl-c17" width="40" height="40"></canvas>
+        <strong class="cpl-title">Minecraft Circle 17 Pattern</strong>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Diameter</span>
+          <span class="cpl-stat-val green">17</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Hollow blocks</span>
+          <span class="cpl-stat-val">60</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Filled blocks</span>
+          <span class="cpl-stat-val">221</span>
+        </div>
+        <p class="cpl-use">📍 Towers, medium domes</p>
+      </a>
+      <a class="cpl-card" data-bs="21" href="javascript:void(0)">
+        <canvas class="cpl-preview" id="cpl-c21" width="40" height="40"></canvas>
+        <strong class="cpl-title">Minecraft Circle 21 Pattern</strong>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Diameter</span>
+          <span class="cpl-stat-val green">21</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Hollow blocks</span>
+          <span class="cpl-stat-val">72</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Filled blocks</span>
+          <span class="cpl-stat-val">345</span>
+        </div>
+        <p class="cpl-use">📍 Arena floors, large domes</p>
+      </a>
+      <a class="cpl-card" data-bs="25" href="javascript:void(0)">
+        <canvas class="cpl-preview" id="cpl-c25" width="40" height="40"></canvas>
+        <strong class="cpl-title">Minecraft Circle 25 Pattern</strong>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Diameter</span>
+          <span class="cpl-stat-val green">25</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Hollow blocks</span>
+          <span class="cpl-stat-val">88</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Filled blocks</span>
+          <span class="cpl-stat-val">493</span>
+        </div>
+        <p class="cpl-use">📍 Large tower bases</p>
+      </a>
+      <a class="cpl-card" data-bs="33" href="javascript:void(0)">
+        <canvas class="cpl-preview" id="cpl-c33" width="40" height="40"></canvas>
+        <strong class="cpl-title">Minecraft Circle 33 Pattern</strong>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Diameter</span>
+          <span class="cpl-stat-val green">33</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Hollow blocks</span>
+          <span class="cpl-stat-val">116</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Filled blocks</span>
+          <span class="cpl-stat-val">861</span>
+        </div>
+        <p class="cpl-use">📍 Arena floors, coliseums</p>
+      </a>
+      <a class="cpl-card" data-bs="65" href="javascript:void(0)">
+        <canvas class="cpl-preview" id="cpl-c65" width="40" height="40"></canvas>
+        <strong class="cpl-title">Minecraft Circle 65 Pattern</strong>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Diameter</span>
+          <span class="cpl-stat-val green">65</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Hollow blocks</span>
+          <span class="cpl-stat-val">228</span>
+        </div>
+        <div class="cpl-stat-row">
+          <span class="cpl-stat-label">Filled blocks</span>
+          <span class="cpl-stat-val">3341</span>
+        </div>
+        <p class="cpl-use">📍 Mega builds, fortresses</p>
+      </a>
+    </div>
+  </div>
+
+  <div class="content-section">
+    <div class="cs-header">
+      <div class="cs-label">FAQ</div>
+      <h2 class="cs-title">Frequently Asked Questions</h2>
+    </div>
+    <div class="faq">
+      <div class="faq-item open">
+        <h3 class="faq-q">How Do You Build a Circle in Minecraft Step by Step?</h3>
+        <div class="faq-a">The easiest way to make a circle in Minecraft is to use a circle generator — it calculates the exact block layout so you don't have to. Enter your diameter, choose Hollow or Filled, and the tool instantly shows you the <strong>circle pattern</strong>: a sequence of block counts from the top row down to the center. In-game, place your center block, extend the axes outward, then follow the pattern row by row — placing blocks left and right of center. Mirror the sequence below the center to complete the full circle. The <strong>Circle Pattern</strong> panel on this page generates this automatically for any size.</div>
+      </div>
+      <div class="faq-item">
+        <h3 class="faq-q">What's the Difference Between Odd and Even Diameter Circles?</h3>
+        <div class="faq-a">An <strong>odd-diameter</strong> circle (e.g. 21) has a true single-block center, making it easier to place symmetrically around a central column. An <strong>even-diameter</strong> circle (e.g. 20) has a 4-block center — there's no single block at the exact center. For most Minecraft builds, odd diameters are recommended.</div>
+      </div>
+      <div class="faq-item">
+        <h3 class="faq-q">What's the Difference Between Hollow, Filled, and Border+?</h3>
+        <div class="faq-a"><strong>Hollow</strong> generates only the outer ring of blocks — the circle outline. <strong>Filled</strong> fills every block inside the circle boundary, creating a solid disc. <strong>Border+</strong> draws a thicker outline ring, useful for walls that need to be more than 1 block deep.</div>
+      </div>
+      <div class="faq-item">
+        <h3 class="faq-q">How Do I Use the Row Guide to Build in Minecraft?</h3>
+        <div class="faq-a">Find the center of your build area. Then use the Row Guide table from top to bottom. Each row tells you the Y offset from center, how many blocks to place, and how far left and right of center. Place the center row first, then work outward symmetrically. The guide accounts for symmetry, so each row described applies to both the top and bottom mirror row.</div>
+      </div>
+      <div class="faq-item">
+        <h3 class="faq-q">Why Doesn't My Minecraft Circle Look Perfectly Round?</h3>
+        <div class="faq-a">Minecraft uses square blocks, so true mathematical circles can't be perfectly represented. The Bresenham algorithm gives the best possible approximation, but some "staircase" artifacts are unavoidable — especially at smaller diameters. Larger circles (25+) look noticeably rounder. This is an inherent property of pixel/block art, not a bug.</div>
+      </div>
+      <div class="faq-item">
+        <h3 class="faq-q">Can I Generate Ovals and Ellipses Too?</h3>
+        <div class="faq-a">Yes! Simply turn off the <em>Force Circle</em> toggle and enter different values for Width and Height. The generator will compute an ellipse using the correct semi-axis ratios, giving you a stretched circle in any proportion.</div>
+      </div>
+      <div class="faq-item">
+        <h3 class="faq-q">What Does "Stacks of 64" Mean in the Block Count?</h3>
+        <div class="faq-a">In Minecraft, most items stack to 64 per inventory slot. The "Stacks of 64" figure tells you how many full inventory stacks of blocks you need to gather before starting your build. This makes material planning much faster.</div>
+      </div>
+
+      <div class="faq-item">
+        <h3 class="faq-q">How Many Blocks Does a Minecraft Circle Use?</h3>
+        <div class="faq-a">The number of blocks depends on the diameter and whether the circle is hollow or filled. For example, a <strong>21×21 hollow Minecraft circle</strong> uses around 64 blocks (1 stack), while a <strong>21×21 filled circle</strong> uses around 317 blocks (about 4 stacks + 61 blocks). Larger circles grow roughly with the square of the radius. Use the <strong>Build Materials</strong> section above — it automatically shows the exact block count, stacks of 64, and stacks of 16 for the current circle.</div>
+      </div>
+      <div class="faq-item">
+        <h3 class="faq-q">How Many Stacks of Blocks Do I Need for a Minecraft Circle?</h3>
+        <div class="faq-a">The <strong>Build Materials</strong> panel automatically calculates the total blocks and converts them into stacks of 64 (standard inventory stacks) and stacks of 16 (for items like signs or ender pearls). It also tells you the exact remainder — for example <em>5 stacks + 29 blocks — Bring: 6 stacks</em> — so you know exactly how many stacks to carry before you start building. The count updates live whenever you change the size, switch between hollow and filled, or manually edit blocks.</div>
+      </div>
+
+      <div class="faq-item">
+        <h3 class="faq-q">Does the Downloaded Blueprint Image Include Block Coordinates?</h3>
+        <div class="faq-a">Yes, but coordinates are <strong>off by default</strong> in the export. To include them, enable the <strong>Coordinates</strong> toggle in the Export Blueprint options before downloading. Once enabled, the exported image will include X and Y labels along the top and left edges of the grid, plus a center marker, so you can locate the exact position of each block while building. This is especially useful for large Minecraft circles, towers or domes where precise block placement matters.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-section">
+    <div class="cs-header">
+      <div class="cs-label">More Tools</div>
+      <h2 class="cs-title">Related Minecraft Generators</h2>
+    </div>
+    <div class="related-grid">
+      <a href="3d-minecraft-circle-generator.html" class="rel-card">
+        <div class="rel-icon">🌐</div>
+        <h3 class="rel-name">Minecraft Sphere Generator</h3>
+        <div class="rel-desc">Layer-by-layer sphere blueprints for 3D builds.</div>
+        <span class="rel-badge">Coming soon</span>
+      </a>
+      <a href="#" class="rel-card">
+        <div class="rel-icon">🏛️</div>
+        <h3 class="rel-name">Minecraft Dome Generator</h3>
+        <div class="rel-desc">Half-sphere and dome layer guides for domed roofs.</div>
+        <span class="rel-badge">Coming soon</span>
+      </a>
+      <a href="#" class="rel-card">
+        <div class="rel-icon">🧱</div>
+        <h3 class="rel-name">Minecraft Cylinder Generator</h3>
+        <div class="rel-desc">Circles stacked to any height with hollow core.</div>
+        <span class="rel-badge">Coming soon</span>
+      </a>
+      <a href="oval-minecraft-circle-generator.html" class="rel-card">
+        <div class="rel-icon">🥚</div>
+        <h3 class="rel-name">Minecraft Ellipse Generator</h3>
+        <div class="rel-desc">Ovals with independent width and height control.</div>
+        <span class="rel-badge">Available</span>
+      </a>
+      <a href="hollow-minecraft-circle-generator.html" class="rel-card">
+        <div class="rel-icon">⭕</div>
+        <h3 class="rel-name">Minecraft Ring Generator</h3>
+        <div class="rel-desc">Hollow rings with custom wall thickness.</div>
+        <span class="rel-badge">Available</span>
+      </a>
+      <a href="#" class="rel-card">
+        <div class="rel-icon">⚡</div>
+        <h3 class="rel-name">WorldEdit Commands</h3>
+        <div class="rel-desc">Auto-generate /fill and //hcyl commands.</div>
+        <span class="rel-badge">Coming soon</span>
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════ FOOTER ════ -->
+<footer class="site-footer">
+  <p>Minecraft Circle Generator · Free builder tool · Not affiliated with Mojang or Microsoft</p>
+  <p style="margin-top:6px"><a href="index.html">← All Generators</a> · <a href="#">Privacy</a></p>
+</footer>
+
+
+<!-- ════ GRID HOVER TOOLTIP ════ -->
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   MINECRAFT CIRCLE GENERATOR — CORE SCRIPT
+═══════════════════════════════════════════════════════ */
+
+// ── State ──────────────────────────────────────────────
+const state = {
+  W: 21, H: 21,
+  mode: 'hollow',      // hollow | filled | border
+  linked: true,
+  showGrid: true,
+  showAxes: true,
+  showCoords: false,
+  showMaxRow: true,
+  zoom: 1,
+  panX: 0, panY: 0,
+  bs: 16,              // block size in px at zoom=1
+  grid: null,          // 2D array
+  generated: false,
+  // Export settings
+  expGrid: true,
+  expAxes: true,
+  expCoords: true,
+  expCenter: true,
+  expTitle: true,
+  expScale: 2,
+  expBg: 'dark',
+  hoverRow: -1,   // grid Y of hovered row, -1 = none
+};
+
+// ── DOM refs ───────────────────────────────────────────
+const inpW     = document.getElementById('inp-w');
+const inpH     = document.getElementById('inp-h');
+const linkBtn  = document.getElementById('link-btn');
+const tglForce = document.getElementById('toggle-force');
+const modeBtns = document.querySelectorAll('.mode-btn');
+const canvas   = document.getElementById('mainCanvas');
+const ctx      = canvas.getContext('2d');
+const wrap     = document.getElementById('canvas-wrap');
+const inner    = document.getElementById('canvas-inner');
+const qsBtns   = document.querySelectorAll('.qs-btn');
+const emptyHint = document.getElementById('empty-hint');
+
+// ── Algorithm ──────────────────────────────────────────
+function bresenhamCircle(rx, ry) {
+  // Midpoint ellipse algorithm — returns set of (x,y) coords that are "on" the ring
+  const cells = new Set();
+  function put(x, y) { cells.add(`${x},${y}`); }
+
+  if (rx === ry) {
+    // Standard circle
+    let x = 0, y = rx, p = 1 - rx;
+    function pl(px, py) {
+      put(px,py); put(-px,py); put(px,-py); put(-px,-py);
+      put(py,px); put(-py,px); put(py,-px); put(-py,-px);
+    }
+    pl(x, y);
+    while (x < y) {
+      x++;
+      if (p < 0) p += 2*x + 1;
+      else { y--; p += 2*(x-y) + 1; }
+      pl(x, y);
+    }
+  } else {
+    // Ellipse
+    let x = 0, y = ry;
+    let dx = 2*ry*ry*x, dy = 2*rx*rx*y;
+    let p = Math.round(ry*ry - rx*rx*ry + 0.25*rx*rx);
+    function ple(px,py){put(px,py);put(-px,py);put(px,-py);put(-px,-py);}
+    ple(x,y);
+    while (dx < dy) {
+      x++; dx += 2*ry*ry;
+      if (p < 0) p += dx + ry*ry;
+      else { y--; dy -= 2*rx*rx; p += dx - dy + ry*ry; }
+      ple(x,y);
+    }
+    p = Math.round(ry*ry*(x+0.5)*(x+0.5) + rx*rx*(y-1)*(y-1) - rx*rx*ry*ry);
+    while (y > 0) {
+      y--; dy -= 2*rx*rx;
+      if (p > 0) p += rx*rx - dy;
+      else { x++; dx += 2*ry*ry; p += dx - dy + rx*rx; }
+      ple(x,y);
+    }
+  }
+  return cells;
+}
+
+function buildGrid(W, H, mode) {
+  const cols = W;
+  const rows = H;
+  const grid = Array.from({length: rows}, () => new Uint8Array(cols));
+
+  // cx = rx = (W-1)/2  — the SAME formula for both center and radius.
+  // This guarantees equal block counts on all four sides for any W:
+  //   odd  W=9:  cx=4.0, rx=4.0, rRound=4  → leftmost dx=-4, rightmost dx=+4 ✓
+  //   even W=10: cx=4.5, rx=4.5, rRound=5  → leftmost dx=-4.5, rightmost dx=+4.5 ✓
+  const cx = (W - 1) / 2;
+  const cy = (H - 1) / 2;
+  const rx = (W - 1) / 2;
+  const ry = (H - 1) / 2;
+  const rRound = Math.round(rx);
+  const ryRound = Math.round(ry);
+
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const dx = x - cx;
+      const dy = y - cy;
+
+      if (rx === ry) {
+        // ── Circle ──────────────────────────────────────────
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (mode === 'hollow') {
+          if (Math.round(dist) === rRound) grid[y][x] = 1;
+        } else if (mode === 'filled') {
+          if (dist <= rx + 0.5) grid[y][x] = 1;
+        } else if (mode === 'border') {
+          const rd = Math.round(dist);
+          if (rd === rRound || rd === rRound - 1) grid[y][x] = 1;
+        }
+
+      } else {
+        // ── Ellipse ─────────────────────────────────────────
+        const nd = Math.sqrt((dx * dx) / (rx * rx) + (dy * dy) / (ry * ry));
+        if (mode === 'hollow') {
+          if (Math.round(nd * 2) === 2) grid[y][x] = 1;
+        } else if (mode === 'filled') {
+          if (nd <= 1.0) grid[y][x] = 1;
+        } else if (mode === 'border') {
+          const rx2 = rx - 1, ry2 = ry - 1;
+          const nd2 = Math.sqrt((dx * dx) / (rx2 * rx2 + 0.1) + (dy * dy) / (ry2 * ry2 + 0.1));
+          if (nd <= 1.05 && nd2 >= 0.92) grid[y][x] = 1;
+        }
+      }
+    }
+  }
+
+  return grid;
+}
+
+// ── Render ─────────────────────────────────────────────
+const COLORS = {
+  block:      '#5aeb5d',
+  block2:     '#3a7a28',
+  block_top:  'rgba(255,255,255,0.14)',
+  block_side: 'rgba(0,0,0,0.2)',
+  empty:      '#1a1a1a',
+  grid:       'rgba(255,255,255,0.04)',
+  axis:       'rgba(135,244,149,0.4)',
+  coord:      'rgba(135,244,149,0.6)',
+  maxrow:     'rgba(255,173,51,0.22)',
+  maxrow_b:   '#ffad33',
+};
+
+function render() {
+  if (!state.grid) return;
+  const grid = state.grid;
+  const rows = grid.length;
+  const cols = grid[0].length;
+  const bs = state.bs;
+  canvas.width  = cols * bs;
+  canvas.height = rows * bs;
+
+  const cx = (cols - 1) / 2;  // float center: axis passes between blocks for even sizes
+  const cy = (rows - 1) / 2;
+
+  // Find max row width
+  let maxRowCount = 0;
+  const rowCounts = grid.map(row => row.reduce((a,b) => a+b, 0));
+  maxRowCount = Math.max(...rowCounts);
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw each cell
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const px = x * bs, py = y * bs;
+      if (grid[y][x]) {
+        const isMaxRow = state.showMaxRow && rowCounts[y] === maxRowCount && maxRowCount > 0;
+        // Block face — gold if max row, green otherwise
+        ctx.fillStyle = isMaxRow ? COLORS.maxrow_b : COLORS.block;
+        ctx.fillRect(px, py, bs, bs);
+        // Top highlight
+        ctx.fillStyle = COLORS.block_top;
+        ctx.fillRect(px, py, bs, Math.max(2, Math.floor(bs * 0.15)));
+        ctx.fillRect(px, py, Math.max(2, Math.floor(bs * 0.15)), bs);
+        // Bottom shadow
+        ctx.fillStyle = COLORS.block_side;
+        ctx.fillRect(px, py + bs - Math.max(2, Math.floor(bs * 0.2)), bs, Math.max(2, Math.floor(bs * 0.2)));
+      } else {
+        ctx.fillStyle = COLORS.empty;
+        ctx.fillRect(px, py, bs, bs);
+      }
+    }
+  }
+
+  // Grid lines
+  if (state.showGrid && bs >= 6) {
+    ctx.strokeStyle = COLORS.grid;
+    ctx.lineWidth = 0.5;
+    for (let x = 0; x <= cols; x++) {
+      ctx.beginPath(); ctx.moveTo(x * bs, 0); ctx.lineTo(x * bs, canvas.height); ctx.stroke();
+    }
+    for (let y = 0; y <= rows; y++) {
+      ctx.beginPath(); ctx.moveTo(0, y * bs); ctx.lineTo(canvas.width, y * bs); ctx.stroke();
+    }
+  }
+
+  // Axes
+  if (state.showAxes) {
+    ctx.strokeStyle = COLORS.axis;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    // Vertical axis
+    ctx.beginPath();
+    ctx.moveTo((cx + 0.5) * bs, 0);
+    ctx.lineTo((cx + 0.5) * bs, canvas.height);
+    ctx.stroke();
+    // Horizontal axis
+    ctx.beginPath();
+    ctx.moveTo(0, (cy + 0.5) * bs);
+    ctx.lineTo(canvas.width, (cy + 0.5) * bs);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Coordinates
+  if (state.showCoords && bs >= 14) {
+    const isEvenW = cols % 2 === 0, isEvenH = rows % 2 === 0;
+    ctx.fillStyle = COLORS.coord;
+    ctx.font = `${Math.max(7, bs * 0.35)}px JetBrains Mono, monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (let y = 0; y < rows; y += 2) {
+      for (let x = 0; x < cols; x += 2) {
+        const xf = x - cx, yf = cy - y; // float offsets; Y inverted (up=positive)
+        // Match tooltip: for even sizes skip 0, use ceil/floor
+        const lx = isEvenW ? (xf > 0 ? Math.ceil(xf) : Math.floor(xf)) : Math.round(xf);
+        const ly = isEvenH ? (yf > 0 ? Math.ceil(yf) : Math.floor(yf)) : Math.round(yf);
+        ctx.fillText(`${lx >= 0 ? '+' : ''}${lx},${ly >= 0 ? '+' : ''}${ly}`, (x + 0.5) * bs, (y + 0.5) * bs);
+      }
+    }
+  }
+
+  // ── Center mark ──
+  if (bs >= 5) {
+    const cpx = (cx + 0.5) * bs, cpy = (cy + 0.5) * bs;
+    // crosshair
+    ctx.strokeStyle = 'rgba(74,226,144,0.5)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 2]);
+    const arm = Math.min(bs * 1.5, 12);
+    ctx.beginPath(); ctx.moveTo(cpx - arm, cpy); ctx.lineTo(cpx + arm, cpy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cpx, cpy - arm); ctx.lineTo(cpx, cpy + arm); ctx.stroke();
+    ctx.setLineDash([]);
+    // dot
+    ctx.fillStyle = 'rgba(74,226,144,0.8)';
+    ctx.beginPath(); ctx.arc(cpx, cpy, Math.max(2, bs * 0.12), 0, Math.PI * 2); ctx.fill();
+    // CENTER label (only when bs big enough)
+    if (bs >= 14) {
+      ctx.fillStyle = 'rgba(74,226,144,0.55)';
+      ctx.font = `bold ${Math.max(7, bs * 0.28)}px JetBrains Mono, monospace`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText('CENTER', cpx, cpy - arm - 2);
+    }
+  }
+
+  // ── Row highlight (drawn last) ──
+  if (state.hoverRow >= 0 && state.hoverRow < rows) {
+    const isLocked = (state.hoverRow === lockedRow);
+    // Dim all other rows when locked
+    if (isLocked) {
+      ctx.fillStyle = 'rgba(0,0,0,0.38)';
+      for (let y = 0; y < rows; y++) {
+        if (y !== state.hoverRow) ctx.fillRect(0, y * bs, canvas.width, bs);
+      }
+    }
+    // Highlight the active row
+    ctx.fillStyle = isLocked ? 'rgba(74,226,144,0.18)' : 'rgba(74,226,144,0.10)';
+    ctx.fillRect(0, state.hoverRow * bs, canvas.width, bs);
+    ctx.strokeStyle = isLocked ? 'rgba(74,226,144,0.8)' : 'rgba(74,226,144,0.45)';
+    ctx.lineWidth = isLocked ? 1.5 : 1;
+    ctx.setLineDash([]);
+    ctx.strokeRect(0, state.hoverRow * bs, canvas.width, bs);
+  }
+
+  // ── Cell flash (Space toggle feedback) ──
+  if (cellFlashGx >= 0 && cellFlashGy >= 0) {
+    const fx = cellFlashGx * bs, fy = cellFlashGy * bs;
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.fillRect(fx, fy, bs, bs);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([]);
+    ctx.strokeRect(fx + 1, fy + 1, bs - 2, bs - 2);
+  }
+}
+
+// ── Stats ──────────────────────────────────────────────
+function updateStats() {
+  if (!state.grid) return;
+  let total = 0;
+  state.grid.forEach(row => row.forEach(c => { if (c) total++; }));
+
+  const W = state.W, H = state.H;
+
+  // ── Preview info bar ──
+  const rowCounts = state.grid.map(row => row.reduce((a,b)=>a+b,0));
+  const maxC = Math.max(...rowCounts);
+  const radius = Math.round((Math.max(W, H) - 1) / 2);
+  const modeLabel = { hollow: 'Hollow', filled: 'Filled', border: 'Border+' }[state.mode] || state.mode;
+  document.getElementById('i-totalblocks').textContent = total.toLocaleString();
+  document.getElementById('i-maxw').textContent        = `${maxC} blocks`;
+  document.getElementById('i-radius').textContent      = radius;
+  document.getElementById('i-rowpattern').textContent  = modeLabel;
+
+  // ── Toolbar size label ──
+  document.getElementById('tb-size').textContent = `${W}×${H}`;
+
+  // ── Build Materials ──
+  const full64 = Math.floor(total / 64), rem64 = total % 64, need64 = Math.ceil(total / 64);
+  const full16 = Math.floor(total / 16), rem16 = total % 16, need16 = Math.ceil(total / 16);
+
+  document.getElementById('bm-total').textContent = total.toLocaleString() + ' blocks';
+
+  // Stacks of 64
+  const s64main = rem64 === 0
+    ? `${full64} stack${full64 !== 1 ? 's' : ''}`
+    : `${full64} stack${full64 !== 1 ? 's' : ''} + ${rem64} block${rem64 !== 1 ? 's' : ''}`;
+  const s64bring = rem64 === 0 ? '' : `Bring: ${need64} stacks`;
+  document.getElementById('bm-s64-main').textContent  = s64main;
+  document.getElementById('bm-s64-bring').textContent = s64bring;
+
+  // Stacks of 16
+  const s16main = rem16 === 0
+    ? `${full16} stack${full16 !== 1 ? 's' : ''}`
+    : `${full16} stack${full16 !== 1 ? 's' : ''} + ${rem16} block${rem16 !== 1 ? 's' : ''}`;
+  const s16bring = rem16 === 0 ? '' : `Bring: ${need16} stacks`;
+  document.getElementById('bm-s16-main').textContent  = s16main;
+  document.getElementById('bm-s16-bring').textContent = s16bring;
+
+  // ── Circle Pattern (top-half rows only, top to center) ──
+  const rows = state.grid.length;
+  const halfLen = Math.ceil(rows / 2);
+  const patternCounts = [];
+  for (let y = 0; y < halfLen; y++) {
+    const cnt = state.grid[y].reduce((a, b) => a + b, 0);
+    if (cnt > 0) patternCounts.push(cnt);
+  }
+  // Full CSV for clipboard: "Minecraft Circle Pattern (Diameter: W×H)\n1,1,3,5,7"
+  const dLabel = state.W === state.H ? `${state.W}` : `${state.W}×${state.H}`;
+  const patternCSV = `Minecraft Circle Pattern (Diameter: ${dLabel})\n${patternCounts.join(', ')}`;
+  const seqEl    = document.getElementById('cp-sequence');
+  const wrapEl   = document.getElementById('cp-sequence-wrap');
+  const expandBtn= document.getElementById('cp-expand-btn');
+  const countLbl = document.getElementById('cp-count-lbl');
+  const PREVIEW_COUNT = 8; // badges shown in collapsed single-line view
+
+  // Reset expand state when pattern regenerates
+  wrapEl.classList.remove('cp-expanded');
+  expandBtn.classList.add('cp-hidden');
+  expandBtn.textContent = 'Show Full Pattern';
+  countLbl.textContent = '';
+
+  if (!patternCounts.length) {
+    seqEl.innerHTML = '<span style="color:var(--text3)">—</span>';
+    seqEl.dataset.csv = '';
+    seqEl.dataset.fullHtml = '';
+    seqEl.dataset.collapsedHtml = '';
+  } else {
+  const total = patternCounts.length;
+  const makeSpan = n => `<span class="cp-num">${n}</span>`;
+  const fullHtml = patternCounts.map(makeSpan).join('');
+  if (total > PREVIEW_COUNT) {
+    // Collapsed: first N badges + ellipsis hint
+    const previewHtml = patternCounts.slice(0, PREVIEW_COUNT).map(makeSpan).join('')
+      + '<span class="cp-ellipsis" title="Copy Pattern to see all">···</span>'
+      + `<span class="cp-more-hint">+${total - PREVIEW_COUNT} more — Copy to see all</span>`;
+    seqEl.innerHTML = previewHtml;
+    seqEl.dataset.fullHtml = fullHtml;
+    seqEl.dataset.collapsedHtml = previewHtml;
+    countLbl.textContent = `${total} rows total`;
+    expandBtn.classList.remove('cp-hidden');
+    expandBtn.textContent = 'Show All';
+  } else {
+    seqEl.innerHTML = fullHtml;
+    seqEl.dataset.fullHtml = fullHtml;
+    seqEl.dataset.collapsedHtml = fullHtml;
+    countLbl.textContent = total > 0 ? `${total} rows` : '';
+  }
+  seqEl.dataset.csv = patternCSV;
+  } // end else patternCounts.length
+}
+
+// ── Build Guide ────────────────────────────────────────
+const GUIDE_COLLAPSE_ROWS = 10; // kept for compat, unused
+let guideExpanded = false;
+
+// ── Row data cache (built after each generate) ──────────
+// rowData[gy] = { count, left, right, yOff } or null
+let rowData = [];
+
+function buildRowData() {
+  rowData = [];
+  if (!state.grid) return;
+  const grid = state.grid;
+  const rows = grid.length, cols = grid[0].length;
+  const isEvenH = rows % 2 === 0;
+  const isEvenW = cols % 2 === 0;
+  // Float center — matches buildGrid exactly
+  const cy = (rows - 1) / 2;
+  const cx = (cols - 1) / 2;
+
+  for (let y = 0; y < rows; y++) {
+    const count = grid[y].reduce((a, b) => a + b, 0);
+    if (count === 0) { rowData[y] = null; continue; }
+    let startX = -1, endX = -1;
+    for (let x = 0; x < cols; x++) {
+      if (grid[y][x]) { if (startX < 0) startX = x; endX = x; }
+    }
+
+    // yOff: distance from center, up = positive
+    // For even height: cy is x.5, so yOff_float is always ±0.5, ±1.5 etc.
+    // Map to integers skipping 0: +0.5→+1, -0.5→-1, +1.5→+2, -1.5→-2 …
+    const yOff_float = cy - y;
+    let yOff;
+    if (isEvenH) {
+      yOff = yOff_float > 0 ? Math.ceil(yOff_float) : Math.floor(yOff_float);
+    } else {
+      yOff = Math.round(yOff_float);
+    }
+
+    // Left/Right: blocks from center to outermost block on each side
+    // For even width cx is x.5, distances are x.5 — round to nearest integer
+    const left  = Math.round(Math.abs(startX - cx));
+    const right = Math.round(Math.abs(endX   - cx));
+
+    rowData[y] = { count, left, right, yOff };
+  }
+}
+
+// ── Row-Lock State ───────────────────────────────────────
+let lockedRow = -1;  // grid-Y of locked row, -1 = none
+
+function getActiveRows() {
+  // Returns sorted list of grid-Y indices that have blocks
+  return rowData.map((d, y) => d ? y : -1).filter(y => y >= 0);
+}
+
+function setLockedRow(gy) {
+  if (!state.grid) return;
+  const rows = state.grid.length;
+  if (gy < 0 || gy >= rows || !rowData[gy]) return;
+  lockedRow = gy;
+  state.hoverRow = gy;
+  render();
+  // Update lock bar
+  const d = rowData[gy];
+  document.getElementById('lock-row-label').textContent =
+    d.yOff === 0 ? 'Center Row' : `Row ${d.yOff > 0 ? '+' : ''}${d.yOff}`;
+  document.getElementById('row-lock-bar').classList.add('active');
+  // Show tooltip with locked row info + current hover cell
+  updateTooltipForRow(gy, true);
+  if (hoverGx >= 0 && hoverGy >= 0) updateTooltipCell(hoverGx, hoverGy);
+  tooltip.style.display = 'block';
+}
+
+function unlockRow() {
+  lockedRow = -1;
+  state.hoverRow = hoverGy >= 0 ? hoverGy : -1; // restore visual hover if mouse still on canvas
+  render();
+  // Only hide tooltip if mouse isn't hovering the canvas
+  if (hoverGx < 0) tooltip.style.display = 'none';
+  document.getElementById('row-lock-bar').classList.remove('active');
+}
+
+function updateTooltipForRow(gy, locked) {
+  const d = rowData[gy];
+  if (!d) return;
+  const rowLabel = d.yOff === 0 ? '0  (center)' : (d.yOff > 0 ? '+' : '') + d.yOff;
+  document.getElementById('tt-row').textContent    = rowLabel;
+  document.getElementById('tt-blocks').textContent = d.count;
+  document.getElementById('tt-left').textContent   = d.left;
+  document.getElementById('tt-right').textContent  = d.right;
+  document.getElementById('tt-hint').textContent   = locked
+    ? '↑ ↓ to step · click canvas to unlock'
+    : 'Click canvas to lock · ↑↓ to step';
+}
+
+function updateTooltipCell(gx, gy) {
+  if (!state.grid) return;
+  const cols = state.grid[0].length, rows = state.grid.length;
+  const isEvenW = cols % 2 === 0, isEvenH = rows % 2 === 0;
+  const cx = (cols - 1) / 2, cy = (rows - 1) / 2;
+
+  // X: distance from center, right = positive
+  const xOff_float = gx - cx;
+  let cellX;
+  if (isEvenW) {
+    cellX = xOff_float > 0 ? Math.ceil(xOff_float) : Math.floor(xOff_float);
+  } else {
+    cellX = Math.round(xOff_float);
+  }
+
+  // Y: distance from center, up = positive (inverted)
+  const yOff_float = cy - gy;
+  let cellY;
+  if (isEvenH) {
+    cellY = yOff_float > 0 ? Math.ceil(yOff_float) : Math.floor(yOff_float);
+  } else {
+    cellY = Math.round(yOff_float);
+  }
+
+  document.getElementById('tt-cx').textContent = (cellX >= 0 ? '+' : '') + cellX;
+  document.getElementById('tt-cy').textContent = (cellY >= 0 ? '+' : '') + cellY;
+}
+
+// buildGuide is now a no-op (data lives in rowData)
+function buildGuide() {
+  buildRowData();
+  // If a row was already locked by the user, re-validate it after regenerate
+  if (lockedRow >= 0) {
+    const rows = state.grid ? state.grid.length : 0;
+    if (lockedRow < rows && rowData[lockedRow]) {
+      setLockedRow(lockedRow); // refresh lock bar label
+    } else {
+      unlockRow(); // locked row no longer exists after resize
+    }
+  }
+  // No auto-lock on first generate — hover works immediately from mouse entry
+}
+
+// ── Pan/Zoom ───────────────────────────────────────────
+function applyTransform() {
+  inner.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
+  document.getElementById('zoom-display').textContent = Math.round(state.zoom * 100) + '%';
+}
+
+function fitToScreen() {
+  const ww = wrap.clientWidth - 40;
+  const wh = wrap.clientHeight - 40;
+  if (!canvas.width || !canvas.height) return;
+  const scaleX = ww / canvas.width;
+  const scaleY = wh / canvas.height;
+  state.zoom = Math.min(scaleX, scaleY, 4);
+  state.panX = (wrap.clientWidth - canvas.width * state.zoom) / 2;
+  state.panY = (wrap.clientHeight - canvas.height * state.zoom) / 2;
+  applyTransform();
+}
+
+function resetZoom() {
+  state.zoom = 1;
+  state.panX = (wrap.clientWidth - canvas.width) / 2;
+  state.panY = (wrap.clientHeight - canvas.height) / 2;
+  applyTransform();
+}
+
+// Mouse/touch pan
+let drag = false, dragSX = 0, dragSY = 0, dragPX = 0, dragPY = 0;
+wrap.addEventListener('mousedown', e => {
+  drag = true; dragSX = e.clientX; dragSY = e.clientY;
+  dragPX = state.panX; dragPY = state.panY;
+  wrap.classList.add('grabbing');
+});
+window.addEventListener('mousemove', e => {
+  if (!drag) return;
+  state.panX = dragPX + (e.clientX - dragSX);
+  state.panY = dragPY + (e.clientY - dragSY);
+  applyTransform();
+});
+window.addEventListener('mouseup', () => { drag = false; wrap.classList.remove('grabbing'); });
+
+// ── Grid Hover: Tooltip + Row Highlight + Guide Sync ──
+const tooltip = document.getElementById('grid-tooltip');
+let hoverRAF = null;
+let hoverGx = -1, hoverGy = -1; // currently hovered cell
+
+wrap.addEventListener('mousemove', e => {
+  if (drag) { tooltip.style.display = 'none'; return; }
+  if (!state.grid) return;
+
+  const wRect = wrap.getBoundingClientRect();
+  const mx = e.clientX - wRect.left;
+  const my = e.clientY - wRect.top;
+  const cx_canvas = (mx - state.panX) / state.zoom;
+  const cy_canvas = (my - state.panY) / state.zoom;
+  const bs = state.bs;
+  const gx = Math.floor(cx_canvas / bs);
+  const gy = Math.floor(cy_canvas / bs);
+
+  const rows = state.grid.length, cols = state.grid[0].length;
+
+  // Out of grid — hide tooltip, clear hover
+  if (gx < 0 || gy < 0 || gx >= cols || gy >= rows) {
+    tooltip.style.display = 'none';
+    hoverGx = -1; hoverGy = -1;
+    if (lockedRow < 0 && state.hoverRow !== -1) { state.hoverRow = -1; render(); }
+    return;
+  }
+
+  // Always track the exact cell under the mouse
+  hoverGx = gx; hoverGy = gy;
+
+  // Row highlight: only update when not locked (locked row stays highlighted)
+  const targetRow = lockedRow >= 0 ? lockedRow : gy;
+  if (state.hoverRow !== targetRow) {
+    state.hoverRow = targetRow;
+    if (hoverRAF) cancelAnimationFrame(hoverRAF);
+    hoverRAF = requestAnimationFrame(() => render());
+  }
+
+  // Tooltip: always show with live cell + row info
+  if (!rowData[gy]) {
+    // Hovering an empty row — still show cell coords, hide row section
+    tooltip.style.display = 'none';
+    return;
+  }
+
+  // Row section: show locked row info if locked, otherwise hovered row
+  const rowForInfo = lockedRow >= 0 && rowData[lockedRow] ? lockedRow : gy;
+  updateTooltipForRow(rowForInfo, lockedRow >= 0);
+  updateTooltipCell(gx, gy);
+  tooltip.style.display = 'block';
+});
+
+wrap.addEventListener('mouseleave', () => {
+  tooltip.style.display = 'none';
+  hoverGx = -1; hoverGy = -1;
+  // Keep row highlight if locked; clear otherwise
+  if (lockedRow < 0 && state.hoverRow !== -1) { state.hoverRow = -1; render(); }
+});
+
+// ── Click: lock / unlock row ────────────────────────────
+wrap.addEventListener('click', e => {
+  if (drag) return;
+  if (!state.grid) return;
+
+  const wRect = wrap.getBoundingClientRect();
+  const mx = e.clientX - wRect.left;
+  const my = e.clientY - wRect.top;
+  const cx_canvas = (mx - state.panX) / state.zoom;
+  const cy_canvas = (my - state.panY) / state.zoom;
+  const bs = state.bs;
+  const gx = Math.floor(cx_canvas / bs);
+  const gy = Math.floor(cy_canvas / bs);
+  const rows = state.grid.length, cols = state.grid[0].length;
+
+  if (gx < 0 || gy < 0 || gx >= cols || gy >= rows) return;
+
+  if (lockedRow === gy) {
+    unlockRow(); // click same locked row → unlock
+  } else if (rowData[gy]) {
+    setLockedRow(gy); // lock new row
+  }
+});
+
+// Unlock button in lock bar
+document.getElementById('lock-exit-btn').addEventListener('click', unlockRow);
+
+// ── Keyboard: ↑↓ to step through rows ──────────────────
+window.addEventListener('keydown', e => {
+  if (!state.grid) return;
+  if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+  // Only intercept when canvas area is in focus (not typing in inputs)
+  if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+
+  e.preventDefault();
+  const active = getActiveRows();
+  if (!active.length) return;
+
+  if (lockedRow < 0) {
+    // Not locked yet — lock center row and then step
+    const centerGy = Math.floor(state.grid.length / 2);
+    const best = active.reduce((a, b) =>
+      Math.abs(a - centerGy) <= Math.abs(b - centerGy) ? a : b
+    );
+    setLockedRow(best);
+    return;
+  }
+
+  const idx = active.indexOf(lockedRow);
+  let next;
+  if (e.key === 'ArrowUp') {
+    // Up = visually up = lower grid-Y index
+    next = idx > 0 ? active[idx - 1] : active[0];
+  } else {
+    // Down = visually down = higher grid-Y index
+    next = idx < active.length - 1 ? active[idx + 1] : active[active.length - 1];
+  }
+  setLockedRow(next);
+});
+
+// ── Space: toggle hovered cell ──────────────────────────
+let cellFlashRAF = null;
+let cellFlashGx = -1, cellFlashGy = -1;
+
+window.addEventListener('keydown', e => {
+  if (e.key !== ' ') return;
+  if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+  if (!state.grid) return;
+  const gx = hoverGx, gy = hoverGy;
+  if (gx < 0 || gy < 0) return;
+  const rows = state.grid.length, cols = state.grid[0].length;
+  if (gx >= cols || gy >= rows) return;
+
+  e.preventDefault(); // prevent page scroll
+
+  // Toggle cell
+  state.grid[gy][gx] = state.grid[gy][gx] ? 0 : 1;
+
+  // Flash feedback
+  cellFlashGx = gx; cellFlashGy = gy;
+  buildRowData();
+  render();       // render draws flash via state
+  updateStats();
+
+  // Refresh tooltip row + cell info
+  if (rowData[gy]) updateTooltipForRow(gy, lockedRow === gy);
+  updateTooltipCell(gx, gy);
+
+  // Clear flash after 300ms
+  if (cellFlashRAF) clearTimeout(cellFlashRAF);
+  cellFlashRAF = setTimeout(() => {
+    cellFlashGx = -1; cellFlashGy = -1;
+    render();
+  }, 300);
+});
+
+// Scroll zoom — only when Ctrl held; plain scroll passes through to page
+wrap.addEventListener('wheel', e => {
+  if (!e.ctrlKey && !e.metaKey) return; // let page scroll normally
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.12 : 0.89;
+  const rect = wrap.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const newZoom = Math.max(0.1, Math.min(20, state.zoom * factor));
+  state.panX = mx - (mx - state.panX) * (newZoom / state.zoom);
+  state.panY = my - (my - state.panY) * (newZoom / state.zoom);
+  state.zoom = newZoom;
+  applyTransform();
+}, { passive: false });
+
+// Touch
+let touches = [];
+wrap.addEventListener('touchstart', e => {
+  touches = [...e.touches];
+  drag = touches.length === 1;
+  if (drag) { dragSX = touches[0].clientX; dragSY = touches[0].clientY; dragPX = state.panX; dragPY = state.panY; }
+}, { passive: true });
+wrap.addEventListener('touchmove', e => {
+  if (e.touches.length === 2) {
+    const t0 = e.touches[0], t1 = e.touches[1];
+    const d = Math.hypot(t0.clientX-t1.clientX, t0.clientY-t1.clientY);
+    const d0 = Math.hypot(touches[0]?.clientX-touches[1]?.clientX, touches[0]?.clientY-touches[1]?.clientY);
+    if (d0) { const factor = d / d0; state.zoom = Math.max(0.1, Math.min(20, state.zoom * factor)); applyTransform(); touches = [...e.touches]; }
+  } else if (drag && e.touches.length === 1) {
+    state.panX = dragPX + (e.touches[0].clientX - dragSX);
+    state.panY = dragPY + (e.touches[0].clientY - dragSY);
+    applyTransform();
+  }
+}, { passive: true });
+wrap.addEventListener('touchend', () => { drag = false; });
+
+// Toolbar buttons
+document.getElementById('tb-zoomin').addEventListener('click', () => {
+  const cx = wrap.clientWidth / 2, cy = wrap.clientHeight / 2;
+  const nz = Math.min(20, state.zoom * 1.25);
+  state.panX = cx - (cx - state.panX) * (nz / state.zoom);
+  state.panY = cy - (cy - state.panY) * (nz / state.zoom);
+  state.zoom = nz; applyTransform();
+});
+document.getElementById('tb-zoomout').addEventListener('click', () => {
+  const cx = wrap.clientWidth / 2, cy = wrap.clientHeight / 2;
+  const nz = Math.max(0.1, state.zoom * 0.8);
+  state.panX = cx - (cx - state.panX) * (nz / state.zoom);
+  state.panY = cy - (cy - state.panY) * (nz / state.zoom);
+  state.zoom = nz; applyTransform();
+});
+document.getElementById('tb-fit').addEventListener('click', fitToScreen);
+document.getElementById('tb-reset').addEventListener('click', resetZoom);
+
+// Fullscreen
+const fsBtn = document.getElementById('tb-fs');
+const fsClose = document.getElementById('fs-close-btn');
+fsBtn.addEventListener('click', () => { wrap.classList.toggle('fs-active'); fitToScreen(); });
+fsClose.addEventListener('click', () => { wrap.classList.remove('fs-active'); fitToScreen(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { wrap.classList.remove('fs-active'); fitToScreen(); } });
+
+// ── Generate ───────────────────────────────────────────
+function generate() {
+  const W = Math.max(2, Math.min(999, parseInt(inpW.value) || 21));
+  const H = Math.max(2, Math.min(999, parseInt(inpH.value) || 21));
+  state.W = W; state.H = H;
+
+  // Adaptive block size
+  const maxDim = Math.max(W, H);
+  if      (maxDim <= 15)  state.bs = 24;
+  else if (maxDim <= 30)  state.bs = 18;
+  else if (maxDim <= 60)  state.bs = 12;
+  else if (maxDim <= 120) state.bs = 8;
+  else if (maxDim <= 250) state.bs = 5;
+  else                    state.bs = 3;
+
+  state.grid = buildGrid(W, H, state.mode);
+  state.generated = true;
+  guideExpanded = false;
+  lockedRow = -1; // reset lock on new circle
+
+  render();
+  updateStats();
+  buildGuide();
+  updateQsActive();
+
+  // Center on screen after brief delay
+  setTimeout(fitToScreen, 30);
+}
+
+// ── Inputs ─────────────────────────────────────────────
+inpW.addEventListener('input', () => {
+  if (state.linked) { inpH.value = inpW.value; }
+  generate();
+});
+inpH.addEventListener('input', () => {
+  if (state.linked) { inpW.value = inpH.value; }
+  generate();
+});
+
+// Force circle toggle
+tglForce.addEventListener('change', () => {
+  state.linked = tglForce.checked;
+  linkBtn.classList.toggle('linked', state.linked);
+  if (state.linked) { inpH.value = inpW.value; generate(); }
+});
+linkBtn.addEventListener('click', () => {
+  tglForce.checked = !tglForce.checked;
+  tglForce.dispatchEvent(new Event('change'));
+});
+
+// Mode buttons
+modeBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    modeBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.mode = btn.dataset.mode;
+    generate();
+  });
+});
+
+// Display toggles
+document.getElementById('opt-grid').addEventListener('change', e => { state.showGrid = e.target.checked; render(); });
+document.getElementById('opt-axes').addEventListener('change', e => { state.showAxes = e.target.checked; render(); });
+document.getElementById('opt-coords').addEventListener('change', e => { state.showCoords = e.target.checked; render(); });
+document.getElementById('opt-maxrow').addEventListener('change', e => { state.showMaxRow = e.target.checked; render(); });
+
+// Quick sizes
+qsBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const s = btn.dataset.size;
+    inpW.value = s;
+    inpH.value = s;
+    if (!state.linked) { tglForce.checked = true; state.linked = true; linkBtn.classList.add('linked'); }
+    generate();
+  });
+});
+function updateQsActive() {
+  qsBtns.forEach(b => { b.classList.toggle('active', b.dataset.size == state.W && state.W == state.H); });
+}
+
+// ── Export ─────────────────────────────────────────────
+document.getElementById('btn-png').addEventListener('click', exportPNG);
+document.getElementById('btn-svg').addEventListener('click', exportSVG);
+
+// ── Copy Pattern button ─────────────────────────────────
+document.getElementById('cp-copy-btn').addEventListener('click', () => {
+  const csv = document.getElementById('cp-sequence').dataset.csv || '';
+  if (!csv) return;
+  const doFlash = () => {
+    const btn = document.getElementById('cp-copy-btn');
+    const prev = btn.textContent;
+    btn.textContent = 'Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy Pattern'; btn.classList.remove('copied'); }, 1800);
+  };
+  navigator.clipboard.writeText(csv).then(doFlash).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = csv; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    doFlash();
+  });
+});
+
+// ── Expand / Collapse Pattern ────────────────────────────
+document.getElementById('cp-expand-btn').addEventListener('click', () => {
+  const seqEl    = document.getElementById('cp-sequence');
+  const wrapEl   = document.getElementById('cp-sequence-wrap');
+  const expandBtn= document.getElementById('cp-expand-btn');
+  const isExpanded = wrapEl.classList.contains('cp-expanded');
+  if (isExpanded) {
+    // Collapse
+    seqEl.innerHTML = seqEl.dataset.collapsedHtml || seqEl.innerHTML;
+    wrapEl.classList.remove('cp-expanded');
+    expandBtn.textContent = 'Show All';
+  } else {
+    // Expand
+    seqEl.innerHTML = seqEl.dataset.fullHtml || seqEl.innerHTML;
+    wrapEl.classList.add('cp-expanded');
+    expandBtn.textContent = 'Collapse';
+  }
+});
+
+// Export options collapse toggle
+(function() {
+  const toggle = document.getElementById('export-toggle');
+  const panel  = document.getElementById('export-settings-panel');
+  const icon   = document.getElementById('export-toggle-icon');
+  if (toggle && panel) {
+    toggle.addEventListener('click', () => {
+      const open = panel.classList.toggle('open');
+      icon.textContent = open ? '▾ settings' : '▸ settings';
+    });
+  }
+})();
+
+// Export settings wiring
+document.getElementById('exp-grid').addEventListener('change', e => { state.expGrid = e.target.checked; });
+document.getElementById('exp-axes').addEventListener('change', e => { state.expAxes = e.target.checked; });
+document.getElementById('exp-coords').addEventListener('change', e => { state.expCoords = e.target.checked; });
+document.getElementById('exp-center').addEventListener('change', e => { state.expCenter = e.target.checked; });
+document.getElementById('exp-title').addEventListener('change', e => { state.expTitle = e.target.checked; });
+
+document.querySelectorAll('.scale-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.expScale = parseInt(btn.dataset.scale);
+  });
+});
+
+document.querySelectorAll('.bg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.bg-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.expBg = btn.dataset.bg;
+  });
+});
+
+function renderForExport(scale) {
+  if (!state.grid) return null;
+  const grid = state.grid;
+  const rows = grid.length, cols = grid[0].length;
+
+  // Use a fixed block size for export — always readable regardless of screen bs
+  const bs = Math.max(state.bs, 16);
+
+  // ── Margin for edge coordinates and title ──
+  // coordMargin must fit labels like '-10' in monospace (≈52px at bs=16)
+  const coordMargin = state.expCoords ? Math.max(52, bs * 3.2) : 0;
+  const titleH      = state.expTitle  ? Math.max(44, bs * 2.2) : 0;
+  const halfCell    = Math.ceil(bs * 0.6); // right/bottom padding so last label fits
+
+  const gridW = cols * bs;
+  const gridH = rows * bs;
+  const totalW = coordMargin + gridW + halfCell; // left margin + grid + right pad
+  const totalH = titleH + coordMargin + gridH + halfCell; // title + top margin + grid + bottom pad
+
+  const exp = document.createElement('canvas');
+  exp.width  = totalW * scale;
+  exp.height = totalH * scale;
+  const ec = exp.getContext('2d');
+  ec.imageSmoothingEnabled = false;
+  ec.scale(scale, scale);
+
+  // ── Background ──
+  const bgColor = '#0E1015';
+  if (state.expBg !== 'transparent') {
+    ec.fillStyle = bgColor;
+    ec.fillRect(0, 0, totalW, totalH);
+  }
+
+  // Offsets: grid starts after left margin (coordMargin) and below title+top margin
+  const ox = coordMargin;  // x offset for grid
+  const oy = titleH + coordMargin; // y offset for grid
+
+  // ── TITLE BLOCK ──
+  if (state.expTitle) {
+    const total = grid.reduce((s, row) => s + row.reduce((a,b) => a+b, 0), 0);
+    const modeLabel = state.mode.charAt(0).toUpperCase() + state.mode.slice(1);
+    const title1 = `Minecraft Circle ${state.W} Blueprint`;
+    const title2 = `${modeLabel}  ·  ${state.W}×${state.H}  ·  Blocks: ${total.toLocaleString()}`;
+
+    // Title background strip
+    ec.fillStyle = '#14171E';
+    ec.fillRect(0, 0, totalW, titleH);
+    ec.fillStyle = '#2A2F45';
+    ec.fillRect(0, titleH - 1, totalW, 1);
+
+    // Green accent bar left
+    ec.fillStyle = '#4AE290';
+    ec.fillRect(0, 8, 3, titleH - 16);
+
+    // Title text
+    const t1size = Math.max(12, Math.min(18, bs * 0.85));
+    const t2size = Math.max(9,  Math.min(12, bs * 0.6));
+    ec.fillStyle = '#E8EAF0';
+    ec.font = `bold ${t1size}px "JetBrains Mono", "Courier New", monospace`;
+    ec.textAlign = 'left'; ec.textBaseline = 'top';
+    ec.fillText(title1, 12, 10);
+    ec.fillStyle = '#9AA0BC';
+    ec.font = `${t2size}px "JetBrains Mono", "Courier New", monospace`;
+    ec.fillText(title2, 12, 10 + t1size + 4);
+  }
+
+  // ── GRID CELLS ──
+  const rowCounts = grid.map(row => row.reduce((a,b) => a+b, 0));
+  const maxRowCount = Math.max(...rowCounts);
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const px = ox + x * bs, py = oy + y * bs;
+      if (grid[y][x]) {
+        const isMax = state.showMaxRow && rowCounts[y] === maxRowCount && maxRowCount > 0;
+        // Block face — gold if max row
+        ec.fillStyle = isMax ? '#ffad33' : '#5aeb5d';
+        ec.fillRect(px, py, bs, bs);
+        // Highlight top + left edge
+        ec.fillStyle = 'rgba(255,255,255,0.18)';
+        ec.fillRect(px, py, bs, Math.max(2, Math.floor(bs * 0.14)));
+        ec.fillRect(px, py, Math.max(2, Math.floor(bs * 0.14)), bs);
+        // Shadow bottom + right edge
+        ec.fillStyle = 'rgba(0,0,0,0.28)';
+        ec.fillRect(px, py + bs - Math.max(2, Math.floor(bs * 0.18)), bs, Math.max(2, Math.floor(bs * 0.18)));
+      } else if (state.expBg !== 'transparent') {
+        ec.fillStyle = '#1a1a1a';
+        ec.fillRect(px, py, bs, bs);
+      }
+    }
+  }
+
+  // ── GRID LINES ──
+  if (state.expGrid) {
+    ec.strokeStyle = 'rgba(255,255,255,0.18)';
+    ec.lineWidth = 0.5;
+    for (let x = 0; x <= cols; x++) {
+      ec.beginPath(); ec.moveTo(ox + x*bs, oy); ec.lineTo(ox + x*bs, oy + gridH); ec.stroke();
+    }
+    for (let y = 0; y <= rows; y++) {
+      ec.beginPath(); ec.moveTo(ox, oy + y*bs); ec.lineTo(ox + gridW, oy + y*bs); ec.stroke();
+    }
+  }
+
+  const cx = (cols - 1) / 2, cy2 = (rows - 1) / 2;
+
+  // ── AXIS GUIDELINES ──
+  if (state.expAxes) {
+    ec.save();
+    ec.strokeStyle = 'rgba(90,235,93,0.5)';
+    ec.lineWidth = 1;
+    ec.setLineDash([5, 4]);
+    // Vertical axis
+    ec.beginPath();
+    ec.moveTo(ox + (cx + 0.5) * bs, oy);
+    ec.lineTo(ox + (cx + 0.5) * bs, oy + gridH);
+    ec.stroke();
+    // Horizontal axis
+    ec.beginPath();
+    ec.moveTo(ox, oy + (cy2 + 0.5) * bs);
+    ec.lineTo(ox + gridW, oy + (cy2 + 0.5) * bs);
+    ec.stroke();
+    ec.setLineDash([]);
+    ec.restore();
+  }
+
+  // ── CENTER MARKER ──
+  if (state.expCenter) {
+    const cxPx = ox + (cx + 0.5) * bs;
+    const cyPx = oy + (cy2 + 0.5) * bs;
+    const r = Math.max(4, bs * 0.28);
+
+    ec.save();
+    // Outer ring
+    ec.strokeStyle = '#4AE290';
+    ec.lineWidth = Math.max(1.5, bs * 0.1);
+    ec.beginPath();
+    ec.arc(cxPx, cyPx, r, 0, Math.PI * 2);
+    ec.stroke();
+    // Inner fill dot
+    ec.fillStyle = '#4AE290';
+    ec.beginPath();
+    ec.arc(cxPx, cyPx, Math.max(2, r * 0.4), 0, Math.PI * 2);
+    ec.fill();
+    // "C" label above center
+    const cFontSize = Math.max(8, bs * 0.5);
+    ec.fillStyle = '#4AE290';
+    ec.font = `bold ${cFontSize}px "JetBrains Mono", "Courier New", monospace`;
+    ec.textAlign = 'center'; ec.textBaseline = 'bottom';
+    ec.fillText('C', cxPx, cyPx - r - 2);
+    ec.restore();
+  }
+
+  // ── EDGE COORDINATES ──
+  if (state.expCoords) {
+    const fontSize = Math.max(9, Math.min(13, coordMargin * 0.38));
+    ec.font = `${fontSize}px "JetBrains Mono", "Courier New", monospace`;
+    ec.textAlign = 'center';
+    ec.textBaseline = 'middle';
+
+    // X coordinates along top edge (every 1 or 2 depending on size)
+    const step = cols > 40 ? 4 : cols > 20 ? 2 : 1;
+    for (let x = 0; x < cols; x += step) {
+      const coordX = x - cx;
+      const label = coordX === 0 ? '0' : (coordX > 0 ? `+${coordX}` : `${coordX}`);
+      const px = ox + (x + 0.5) * bs;
+      ec.fillStyle = coordX === 0 ? '#5aeb5d' : '#b0b0b0';
+      ec.fillText(label, px, oy - coordMargin * 0.45);
+    }
+
+    // Y coordinates along left edge
+    for (let y = 0; y < rows; y += step) {
+      const coordY = y - cy2;
+      const label = coordY === 0 ? '0' : (coordY > 0 ? `+${coordY}` : `${coordY}`);
+      const py = oy + (y + 0.5) * bs;
+      ec.fillStyle = coordY === 0 ? '#5aeb5d' : '#b0b0b0';
+      ec.textAlign = 'right';
+      ec.fillText(label, ox - 6, py);
+    }
+    ec.textAlign = 'center';
+
+    // Axis labels
+    ec.fillStyle = '#5aeb5d';
+    ec.font = `bold ${fontSize}px "JetBrains Mono", "Courier New", monospace`;
+    ec.textAlign = 'right'; ec.textBaseline = 'top';
+    ec.fillText('X→', ox + gridW, oy - coordMargin * 0.65);
+    ec.textAlign = 'left'; ec.textBaseline = 'bottom';
+    ec.fillText('Y↓', 2, oy);
+  }
+
+  return exp;
+}
+
+function exportPNG() {
+  if (!state.grid) return;
+  const exp = renderForExport(state.expScale);
+  if (!exp) return;
+  const a = document.createElement('a');
+  a.download = `minecraft-circle-${state.W}x${state.H}-${state.mode}-blueprint.png`;
+  a.href = exp.toDataURL('image/png');
+  a.click();
+}
+
+function exportSVG() {
+  if (!state.grid) return;
+  const grid = state.grid;
+  const rows = grid.length, cols = grid[0].length;
+  const bs = Math.max(state.bs, 16);
+  const coordMargin = state.expCoords ? Math.max(52, bs * 3.2) : 0;
+  const halfCell    = Math.ceil(bs * 0.6);
+  const titleH      = state.expTitle  ? Math.max(44, bs * 2.2) : 0;
+  const gridW = cols * bs, gridH = rows * bs;
+  const totalW = coordMargin + gridW + halfCell;
+  const totalH = titleH + coordMargin + gridH + halfCell;
+  const ox = coordMargin, oy = titleH + coordMargin;
+  const cx = (cols - 1) / 2, cy2 = (rows - 1) / 2;
+  const total = grid.reduce((s, row) => s + row.reduce((a,b) => a+b, 0), 0);
+  const modeLabel = state.mode.charAt(0).toUpperCase() + state.mode.slice(1);
+
+  // Blocks
+  const rowCounts = grid.map(row => row.reduce((a,b) => a+b, 0));
+  const maxRowCount = Math.max(...rowCounts);
+  let blocks = '';
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+    if (grid[y][x]) {
+      const px = ox + x*bs, py2 = oy + y*bs;
+      const isMax = state.showMaxRow && rowCounts[y] === maxRowCount && maxRowCount > 0;
+      const blockFill = isMax ? '#ffad33' : '#5aeb5d';
+      blocks += `<rect x="${px}" y="${py2}" width="${bs}" height="${bs}" fill="${blockFill}"/>`;
+      blocks += `<rect x="${px}" y="${py2}" width="${bs}" height="${Math.max(2,Math.floor(bs*0.14))}" fill="rgba(255,255,255,0.18)"/>`;
+    }
+  }
+
+  // Grid lines
+  let gridSVG = '';
+  if (state.expGrid) {
+    gridSVG = `<g stroke="rgba(255,255,255,0.18)" stroke-width="0.5">`;
+    for (let x = 0; x <= cols; x++) gridSVG += `<line x1="${ox+x*bs}" y1="${oy}" x2="${ox+x*bs}" y2="${oy+gridH}"/>`;
+    for (let y = 0; y <= rows; y++) gridSVG += `<line x1="${ox}" y1="${oy+y*bs}" x2="${ox+gridW}" y2="${oy+y*bs}"/>`;
+    gridSVG += `</g>`;
+  }
+
+  // Axes
+  let axesSVG = '';
+  if (state.expAxes) {
+    axesSVG = `<g stroke="rgba(90,235,93,0.5)" stroke-width="1" stroke-dasharray="5,4">
+      <line x1="${ox+(cx+0.5)*bs}" y1="${oy}" x2="${ox+(cx+0.5)*bs}" y2="${oy+gridH}"/>
+      <line x1="${ox}" y1="${oy+(cy2+0.5)*bs}" x2="${ox+gridW}" y2="${oy+(cy2+0.5)*bs}"/>
+    </g>`;
+  }
+
+  // Center marker
+  let centerSVG = '';
+  if (state.expCenter) {
+    const cxPx = ox + (cx + 0.5) * bs, cyPx = oy + (cy2 + 0.5) * bs;
+    const r = Math.max(4, bs * 0.28);
+    const sw = Math.max(1.5, bs * 0.1);
+    centerSVG = `<circle cx="${cxPx}" cy="${cyPx}" r="${r}" fill="none" stroke="#4AE290" stroke-width="${sw}"/>
+      <circle cx="${cxPx}" cy="${cyPx}" r="${Math.max(2,r*0.4)}" fill="#4AE290"/>
+      <text x="${cxPx}" y="${cyPx - r - 2}" fill="#4AE290" font-size="${Math.max(8,bs*0.5)}" font-family="JetBrains Mono,monospace" font-weight="bold" text-anchor="middle" dominant-baseline="auto">C</text>`;
+  }
+
+  // Coordinates
+  let coordsSVG = '';
+  if (state.expCoords) {
+    const fs = Math.max(9, Math.min(13, coordMargin * 0.38));
+    const step = cols > 40 ? 4 : cols > 20 ? 2 : 1;
+    coordsSVG = `<g font-size="${fs}" font-family="JetBrains Mono,monospace" text-anchor="middle">`;
+    for (let x = 0; x < cols; x += step) {
+      const coord = x - cx;
+      const label = coord === 0 ? '0' : (coord > 0 ? `+${coord}` : `${coord}`);
+      const col = coord === 0 ? '#5aeb5d' : '#b0b0b0';
+      coordsSVG += `<text x="${ox+(x+0.5)*bs}" y="${oy - coordMargin*0.45 + fs/2}" fill="${col}">${label}</text>`;
+    }
+    coordsSVG += `</g><g font-size="${fs}" font-family="JetBrains Mono,monospace" text-anchor="end">`;
+    for (let y = 0; y < rows; y += step) {
+      const coord = y - cy2;
+      const label = coord === 0 ? '0' : (coord > 0 ? `+${coord}` : `${coord}`);
+      const col = coord === 0 ? '#5aeb5d' : '#b0b0b0';
+      coordsSVG += `<text x="${ox - 6}" y="${oy+(y+0.5)*bs + fs/2}" fill="${col}">${label}</text>`;
+    }
+    coordsSVG += `</g>`;
+    coordsSVG += `<text x="${ox+gridW}" y="${oy - coordMargin*0.65 + fs}" fill="#5aeb5d" font-size="${fs}" font-family="JetBrains Mono,monospace" font-weight="bold" text-anchor="end">X→</text>`;
+    coordsSVG += `<text x="2" y="${oy}" fill="#5aeb5d" font-size="${fs}" font-family="JetBrains Mono,monospace" font-weight="bold" dominant-baseline="auto">Y↓</text>`;
+  }
+
+  // Title
+  let titleSVG = '';
+  if (state.expTitle) {
+    const t1size = Math.max(12, Math.min(18, bs * 0.85));
+    const t2size = Math.max(9, Math.min(12, bs * 0.6));
+    const t1 = `Minecraft Circle ${state.W} Blueprint`;
+    const t2 = `${modeLabel}  ·  ${state.W}×${state.H}  ·  Blocks: ${total.toLocaleString()}`;
+    titleSVG = `<rect x="0" y="0" width="${totalW}" height="${titleH}" fill="#14171E"/>
+      <rect x="0" y="8" width="3" height="${titleH-16}" fill="#4AE290"/>
+      <text x="12" y="10" fill="#E8EAF0" font-size="${t1size}" font-family="JetBrains Mono,monospace" font-weight="bold" dominant-baseline="hanging">${t1}</text>
+      <text x="12" y="${10+t1size+4}" fill="#9AA0BC" font-size="${t2size}" font-family="JetBrains Mono,monospace" dominant-baseline="hanging">${t2}</text>`;
+  }
+
+  const bgFill = state.expBg !== 'transparent' ? `<rect width="${totalW}" height="${totalH}" fill="#0E1015"/>` : '';
+
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}">
+  ${bgFill}
+  ${titleSVG}
+  ${blocks}
+  ${gridSVG}
+  ${axesSVG}
+  ${centerSVG}
+  ${coordsSVG}
+</svg>`;
+
+  const blob = new Blob([svg], {type: 'image/svg+xml'});
+  const a = document.createElement('a');
+  a.download = `minecraft-circle-${state.W}x${state.H}-${state.mode}-blueprint.svg`;
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+// ── FAQ ────────────────────────────────────────────────
+document.querySelectorAll('.faq-q').forEach(q => {
+  q.addEventListener('click', () => {
+    const item = q.parentElement;
+    item.classList.toggle('open');
+  });
+});
+
+// ── Nudge buttons ──────────────────────────────────────
+document.querySelectorAll('.nudge-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const axis = btn.dataset.axis;
+    const delta = parseInt(btn.dataset.delta);
+    if (axis === 'w') {
+      const newVal = Math.max(2, Math.min(999, (parseInt(inpW.value) || 21) + delta));
+      inpW.value = newVal;
+      if (state.linked) { inpH.value = newVal; }
+    } else {
+      const newVal = Math.max(2, Math.min(999, (parseInt(inpH.value) || 21) + delta));
+      inpH.value = newVal;
+      if (state.linked) { inpW.value = newVal; }
+    }
+    generate();
+  });
+});
+
+// ── Circle Pattern Library cards ───────────────────────
+document.querySelectorAll('.cpl-card').forEach(card => {
+  card.addEventListener('click', e => {
+    e.preventDefault();
+    const s = card.dataset.bs;
+    inpW.value = s;
+    inpH.value = s;
+    if (!state.linked) { tglForce.checked = true; state.linked = true; linkBtn.classList.add('linked'); }
+    generate();
+    document.getElementById('tool-area').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+// ── Mini circle preview for each CPL card ──────────────
+function drawMiniCircle(canvasEl, diameter) {
+  const size = 40;
+  canvasEl.width = size;
+  canvasEl.height = size;
+  const ec = canvasEl.getContext('2d');
+  ec.fillStyle = '#141820';
+  ec.fillRect(0, 0, size, size);
+  const rx = Math.floor(diameter / 2);
+  const ry = rx;
+  const bs = size / (diameter + 2); // fit with 1-cell padding
+  const cx = Math.floor(size / (2 * bs));
+  const cy = cx;
+
+  // Compute hollow ring
+  const ring = new Set();
+  let x = 0, y = rx, p = 1 - rx;
+  function pl(px, py) {
+    ring.add(`${px},${py}`); ring.add(`${-px},${py}`);
+    ring.add(`${px},${-py}`); ring.add(`${-px},${-py}`);
+    ring.add(`${py},${px}`); ring.add(`${-py},${px}`);
+    ring.add(`${py},${-px}`); ring.add(`${-py},${-px}`);
+  }
+  pl(x, y);
+  while (x < y) {
+    x++;
+    if (p < 0) p += 2*x+1; else { y--; p += 2*(x-y)+1; }
+    pl(x, y);
+  }
+
+  const totalCells = diameter + 2;
+  const cellSize = size / totalCells;
+  const originX = Math.floor(totalCells / 2);
+  const originY = Math.floor(totalCells / 2);
+
+  ring.forEach(k => {
+    const [gx, gy] = k.split(',').map(Number);
+    const px = (originX + gx) * cellSize;
+    const py = (originY + gy) * cellSize;
+    ec.fillStyle = '#5D9E3F';
+    ec.fillRect(px, py, cellSize, cellSize);
+    ec.fillStyle = 'rgba(255,255,255,0.15)';
+    ec.fillRect(px, py, cellSize, cellSize * 0.2);
+  });
+
+  // Center dot
+  const cpx = (originX + 0.5) * cellSize;
+  const cpy = (originY + 0.5) * cellSize;
+  ec.fillStyle = 'rgba(74,226,144,0.7)';
+  ec.beginPath(); ec.arc(cpx, cpy, Math.max(1, cellSize * 0.25), 0, Math.PI * 2); ec.fill();
+}
+
+// Render all mini previews after a short delay (not blocking)
+requestAnimationFrame(() => {
+  document.querySelectorAll('.cpl-card').forEach(card => {
+    const d = parseInt(card.dataset.bs);
+    const cvs = card.querySelector('.cpl-preview');
+    if (cvs) drawMiniCircle(cvs, d);
+  });
+});
+
+// ── Init ───────────────────────────────────────────────
+generate();
+</script>
+</body>
+</html>
