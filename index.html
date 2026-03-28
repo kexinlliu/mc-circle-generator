@@ -911,6 +911,88 @@ canvas.row-locked { cursor: default; }
 @media(max-width:600px) {
   .cpl-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
 }
+
+/* ════════ SOCIAL SHARE BAR ════════ */
+.social-share {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ss-btn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  transition: width .2s, opacity .15s;
+  font-size: 18px;
+  opacity: .88;
+}
+.ss-btn:hover { width: 52px; opacity: 1; }
+.ss-twitter  { background: #000; }
+.ss-reddit   { background: #ff4500; }
+.ss-facebook { background: #1877f2; }
+.ss-copy     { background: #2a2a2a; border-top: 1px solid #444; }
+.ss-btn svg  { width: 20px; height: 20px; fill: #fff; flex-shrink: 0; }
+.ss-copy-tooltip {
+  position: fixed;
+  left: 56px;
+  background: var(--bg2);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .3s;
+  white-space: nowrap;
+}
+.ss-copy-tooltip.show { opacity: 1; }
+@media(max-width:600px) {
+  .social-share { gap: 1px; }
+  .ss-btn { width: 36px; height: 36px; font-size: 15px; }
+  .ss-btn svg { width: 16px; height: 16px; }
+}
+
+
+.header-feedback {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.feedback-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  border-radius: var(--radius);
+  cursor: pointer; text-decoration: none;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.feedback-btn:hover {
+  background: var(--accent-bg);
+  box-shadow: 0 0 8px rgba(90,235,93,.2);
+}
+.feedback-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
+@media(max-width:480px) {
+  .feedback-btn span { display: none; }
+  .feedback-btn { padding: 6px 10px; }
+}
+
 </style>
 <script type="application/ld+json">
 [
@@ -1033,6 +1115,42 @@ canvas.row-locked { cursor: default; }
 </head>
 <body>
 
+<!-- Social Share Bar -->
+<div class="social-share">
+  <a class="ss-btn ss-twitter" href="#" target="_blank" rel="noopener" id="ss-twitter" title="Share on X">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+  </a>
+  <a class="ss-btn ss-reddit" href="#" target="_blank" rel="noopener" id="ss-reddit" title="Share on Reddit">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/></svg>
+  </a>
+  <a class="ss-btn ss-facebook" href="#" target="_blank" rel="noopener" id="ss-facebook" title="Share on Facebook">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+  </a>
+  <button class="ss-btn ss-copy" id="ss-copy" title="Copy link">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13.828 10.172a4 4 0 0 0-5.656 0l-4 4a4 4 0 1 0 5.656 5.656l1.102-1.101m-.758-4.899a4 4 0 0 0 5.656 0l4-4a4 4 0 0 0-5.656-5.656l-1.1 1.1"/></svg>
+  </button>
+</div>
+<div class="ss-copy-tooltip" id="ss-tooltip">Link copied!</div>
+
+<script>
+(function(){
+  var url = encodeURIComponent(window.location.href);
+  var title = encodeURIComponent(document.title);
+  document.getElementById('ss-twitter').href  = 'https://twitter.com/intent/tweet?url='+url+'&text='+title;
+  document.getElementById('ss-reddit').href   = 'https://www.reddit.com/submit?url='+url+'&title='+title;
+  document.getElementById('ss-facebook').href = 'https://www.facebook.com/sharer/sharer.php?u='+url;
+  document.getElementById('ss-copy').addEventListener('click', function(){
+    navigator.clipboard.writeText(window.location.href).then(function(){
+      var t = document.getElementById('ss-tooltip');
+      t.style.top = (window.innerHeight/2 - 12) + 'px';
+      t.classList.add('show');
+      setTimeout(function(){ t.classList.remove('show'); }, 2000);
+    });
+  });
+})();
+</script>
+
+
 <!-- ════ HEADER ════ -->
 <header class="site-header">
   <div class="logo-mark">
@@ -1041,6 +1159,12 @@ canvas.row-locked { cursor: default; }
     <span></span><span></span><span></span>
   </div>
   <div class="site-title"><em>Minecraft</em> Circle Generator</div>
+  <div class="header-feedback">
+    <a class="feedback-btn" href="https://github.com/kexinlliu/mc-circle-generator/issues/new?title=Feedback+%2F+Feature+Request&body=**What+would+you+like+to+see+improved+or+added%3F**%0A%0A" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>Feedback</span>
+    </a>
+  </div>
 </header>
 
 <!-- ════ HERO ════ -->
